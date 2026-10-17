@@ -1,0 +1,1807 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="theme-color" content="#f3f5ef">
+	<title>Oqim — talaba yordamchisi</title>
+	<style>
+		:root {
+			color-scheme: light;
+			--ink: #182a2d;
+			--muted: #667b7c;
+			--paper: #edf3f1;
+			--surface: rgba(255, 255, 255, .68);
+			--line: rgba(61, 99, 94, .16);
+			--green: #176b61;
+			--green-soft: #dceee8;
+			--orange: #e77b52;
+			--orange-soft: #f8e4da;
+			--yellow: #e4c75d;
+			--shadow: 0 18px 48px rgba(30, 69, 66, .09);
+		}
+
+		* { box-sizing: border-box; }
+		body {
+			margin: 0;
+			min-width: 320px;
+			background-color: var(--paper);
+			background-image: linear-gradient(rgba(34, 92, 83, .035) 1px, transparent 1px), linear-gradient(90deg, rgba(34, 92, 83, .035) 1px, transparent 1px);
+			background-size: 28px 28px;
+			color: var(--ink);
+			font-family: "Aptos", "Segoe UI", sans-serif;
+			font-size: 15px;
+		}
+		body[data-pattern="diagonal"] { background-image: repeating-linear-gradient(135deg, rgba(34,92,83,.055) 0 1px, transparent 1px 18px); }
+		body[data-pattern="dots"] { background-image: radial-gradient(rgba(34,92,83,.13) 1px, transparent 1px); background-size: 18px 18px; }
+		body[data-pattern="lines"] { background-image: repeating-linear-gradient(0deg, rgba(34,92,83,.055) 0 1px, transparent 1px 12px); }
+		body[data-pattern="solid"] { background-image: none; }
+		button, input, select, textarea { font: inherit; }
+		button { cursor: pointer; }
+		button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+			outline: 3px solid rgba(232, 120, 77, .38);
+			outline-offset: 2px;
+		}
+		.app-shell { min-height: 100vh; }
+		.topbar {
+			height: 72px;
+			padding: 0 max(calc((100vw - 1360px) / 2), 2.5vw);
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			border-bottom: 1px solid var(--line);
+			background: rgba(247, 251, 249, .76);
+			backdrop-filter: blur(18px) saturate(1.2);
+		}
+		.brand { display: flex; align-items: center; gap: 11px; font-size: 21px; font-weight: 750; letter-spacing: .2px; }
+		.brand-mark {
+			width: 34px;
+			height: 34px;
+			display: grid;
+			place-items: center;
+			border-radius: 11px;
+			color: white;
+			background: var(--green);
+			font-size: 18px;
+		}
+		.top-date { color: var(--muted); font-size: 13px; text-transform: capitalize; }
+		.app-layout { display: grid; grid-template-columns: 205px minmax(0, 1fr); gap: 42px; width: min(1360px, 95vw); min-width: 0; margin: 0 auto; }
+		.sidebar-nav { position: sticky; top: 20px; align-self: start; min-width: 0; padding: 38px 0; }
+		.nav-caption { margin: 0 0 13px 12px; color: var(--muted); font-size: 10px; font-weight: 800; letter-spacing: 1.3px; }
+		.nav-list { display: grid; gap: 4px; }
+		.nav-button { width: 100%; min-height: 44px; display: flex; align-items: center; gap: 12px; padding: 0 12px; border: 0; border-radius: 4px; color: #596458; background: transparent; text-align: left; font-size: 13px; font-weight: 650; }
+		.nav-button:hover { color: var(--green); background: rgba(255,255,255,.66); }
+		.nav-button[aria-current="page"] { color: var(--green); background: rgba(220, 238, 232, .82); }
+		.nav-icon { width: 22px; color: var(--orange); font-size: 11px; font-weight: 800; font-variant-numeric: tabular-nums; }
+		.sidebar-nav, .library-categories, .theme-picker { scrollbar-width: none; }
+		.sidebar-nav::-webkit-scrollbar, .library-categories::-webkit-scrollbar, .theme-picker::-webkit-scrollbar { display: none; }
+		main { min-width: 0; padding: 42px 0 64px; }
+		.view-panel[hidden] { display: none; }
+		.view-heading { margin-bottom: 23px; }
+		.view-heading h1 { margin-bottom: 7px; font-size: 30px; }
+		.view-heading p { margin-bottom: 0; color: var(--muted); font-size: 13px; }
+		.welcome { display: flex; align-items: end; justify-content: space-between; gap: 20px; margin-bottom: 30px; }
+		.eyebrow { margin: 0 0 9px; color: var(--green); font-size: 11px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; }
+		h1, h2, p { margin-top: 0; }
+		h1 { margin-bottom: 8px; font-size: clamp(28px, 4vw, 39px); line-height: 1.08; letter-spacing: -.5px; }
+		.welcome-copy { margin: 0; color: var(--muted); }
+		.day-chip { flex: 0 0 auto; padding: 11px 15px; border: 1px solid var(--line); border-radius: 5px; color: var(--green); background: var(--surface); font-size: 13px; font-weight: 700; }
+		.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 22px; }
+		.stat { min-height: 100px; padding: 17px 20px; border: 1px solid var(--line); border-radius: 5px; background: var(--surface); }
+		.stat-label { margin-bottom: 11px; color: var(--muted); font-size: 12px; }
+		.stat-value { display: flex; align-items: baseline; gap: 7px; font-size: 26px; font-weight: 750; }
+		.stat-value small { color: var(--muted); font-size: 12px; font-weight: 500; }
+		.workspace { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(285px, .85fr); gap: 22px; align-items: start; }
+		.panel { border: 1px solid var(--line); border-radius: 6px; background: var(--surface); box-shadow: var(--shadow); backdrop-filter: blur(18px) saturate(1.2); }
+		.tasks-panel { padding: 22px; }
+		.panel-heading { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 20px; }
+		h2 { margin-bottom: 0; font-size: 18px; letter-spacing: -.2px; }
+		.count-pill { padding: 5px 9px; border-radius: 20px; background: var(--green-soft); color: var(--green); font-size: 11px; font-weight: 750; }
+		.task-form { display: grid; grid-template-columns: minmax(120px, 1fr) 130px 115px auto; gap: 8px; margin-bottom: 19px; }
+		.field {
+			width: 100%;
+			min-width: 0;
+			height: 42px;
+			padding: 0 11px;
+			border: 1px solid var(--line);
+			border-radius: 4px;
+			background: #fff;
+			color: var(--ink);
+			font-size: 13px;
+		}
+		.field::placeholder { color: #9aa397; }
+		.primary-button { min-height: 42px; padding: 0 14px; border: 0; border-radius: 4px; color: white; background: var(--green); font-size: 13px; font-weight: 700; transition: background .16s, transform .16s; }
+		.primary-button:hover { background: #1f4c36; transform: translateY(-1px); }
+		.task-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
+		.filters { display: flex; gap: 5px; }
+		.filter-button { padding: 7px 10px; border: 0; border-radius: 3px; color: var(--muted); background: transparent; font-size: 12px; }
+		.filter-button[aria-pressed="true"] { color: var(--green); background: var(--green-soft); font-weight: 750; }
+		.search { width: 150px; height: 32px; padding: 0 9px; border: 1px solid var(--line); border-radius: 3px; font-size: 12px; }
+		.task-list { min-height: 92px; }
+		.task-row { display: grid; grid-template-columns: 21px minmax(0, 1fr) auto 30px; gap: 11px; align-items: center; padding: 14px 2px; border-bottom: 1px solid #edf0e9; animation: arrive .22s ease-out both; }
+		.task-check { width: 17px; height: 17px; margin: 0; accent-color: var(--green); cursor: pointer; }
+		.task-title { margin-bottom: 4px; overflow-wrap: anywhere; font-size: 13px; font-weight: 650; }
+		.task-row.is-done .task-title { color: #929a8e; text-decoration: line-through; }
+		.task-meta { display: flex; flex-wrap: wrap; gap: 6px; color: var(--muted); font-size: 11px; }
+		.subject-tag { color: var(--green); }
+		.due { white-space: nowrap; color: var(--muted); font-size: 11px; }
+		.due.overdue { color: #bb4d37; font-weight: 700; }
+		.delete-button { width: 30px; height: 30px; border: 0; border-radius: 4px; color: #8b9487; background: transparent; font-size: 17px; }
+		.delete-button:hover { color: #a43f2a; background: var(--orange-soft); }
+		.empty-state { padding: 31px 12px 24px; color: var(--muted); text-align: center; font-size: 13px; }
+		.empty-state strong { display: block; margin-bottom: 5px; color: var(--ink); font-size: 14px; }
+		.side-column { display: grid; gap: 18px; }
+		.focus-panel { padding: 21px; overflow: hidden; color: white; background: var(--green); border-color: var(--green); }
+		.focus-panel .panel-heading { margin-bottom: 2px; }
+		.focus-panel h2 { color: white; }
+		.focus-mode { color: #d6e5d8; font-size: 11px; }
+		.timer-face { display: grid; place-items: center; padding: 19px 0 16px; }
+		.timer-ring { width: 164px; height: 164px; display: grid; place-items: center; border: 1px solid rgba(255,255,255,.24); border-radius: 50%; box-shadow: inset 0 0 0 8px rgba(255,255,255,.06); }
+		.timer-time { font-variant-numeric: tabular-nums; font-size: 40px; font-weight: 650; letter-spacing: 1px; }
+		.timer-controls { display: flex; justify-content: center; gap: 9px; }
+		.timer-button { min-width: 94px; height: 39px; border: 1px solid rgba(255,255,255,.25); border-radius: 4px; color: white; background: transparent; font-size: 12px; font-weight: 700; }
+		.timer-button.primary { border-color: var(--yellow); color: var(--ink); background: var(--yellow); }
+		.timer-button:hover { filter: brightness(1.06); }
+		.timer-switch { display: block; margin: 15px auto 0; padding: 4px; border: 0; color: #d6e5d8; background: transparent; font-size: 11px; text-decoration: underline; text-underline-offset: 3px; }
+		.notes-panel { padding: 20px; }
+		.notes-panel .panel-heading { margin-bottom: 12px; }
+		.notes-hint { margin: 0 0 11px; color: var(--muted); font-size: 11px; }
+		.notes-area { width: 100%; min-height: 126px; resize: vertical; padding: 12px; border: 1px solid var(--line); border-radius: 4px; color: var(--ink); background: #fff; font-size: 13px; line-height: 1.55; }
+		.notes-status { display: flex; justify-content: space-between; margin-top: 8px; color: var(--muted); font-size: 10px; }
+		.library-section { margin-top: 22px; padding: 22px; }
+		.library-form { display: grid; grid-template-columns: 1.1fr .9fr .9fr 1.1fr auto; gap: 8px; margin-bottom: 18px; }
+		.library-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
+		.library-search { width: min(280px, 55%); height: 36px; padding: 0 10px; border: 1px solid var(--line); border-radius: 3px; font-size: 12px; }
+		.library-filter { width: 155px; height: 36px; padding: 0 9px; border: 1px solid var(--line); border-radius: 3px; color: var(--ink); background: white; font-size: 12px; }
+		.library-list { min-height: 80px; }
+		.library-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 14px 2px; border-bottom: 1px solid #edf0e9; animation: arrive .22s ease-out both; }
+		.library-title { margin-bottom: 4px; overflow-wrap: anywhere; font-size: 13px; font-weight: 700; }
+		.library-meta { display: flex; flex-wrap: wrap; gap: 7px; color: var(--muted); font-size: 11px; }
+		.library-subject { color: var(--green); }
+		.library-actions { display: flex; align-items: center; gap: 8px; }
+		.library-status { width: 142px; height: 34px; padding: 0 8px; border: 1px solid var(--line); border-radius: 3px; color: var(--ink); background: white; font-size: 11px; }
+		.library-link { color: var(--green); font-size: 12px; font-weight: 700; text-decoration: none; white-space: nowrap; }
+		.library-link:hover { text-decoration: underline; text-underline-offset: 3px; }
+		.auth-gate { min-height: 100vh; display: grid; place-items: center; padding: 30px 5vw; }
+		.auth-card { width: min(920px, 100%); display: grid; grid-template-columns: 1fr .92fr; overflow: hidden; border: 1px solid rgba(61,99,94,.18); border-radius: 8px; background: rgba(255,255,255,.68); box-shadow: 0 28px 80px rgba(30,69,66,.14); backdrop-filter: blur(24px) saturate(1.25); }
+		.auth-intro { min-height: 490px; display: flex; flex-direction: column; justify-content: space-between; padding: 36px; color: #eff8f4; background: #173d3d; }
+		.auth-intro .brand { color: white; }
+		.auth-intro h1 { max-width: 370px; margin: 28px 0 12px; color: white; font-family: Georgia, "Times New Roman", serif; font-size: 38px; line-height: 1.1; }
+		.auth-intro-copy { max-width: 330px; margin: 0; color: #c9ddda; font-size: 13px; line-height: 1.6; }
+		.auth-color-strip { display: flex; gap: 8px; margin-top: 28px; }
+		.auth-color-strip span { width: 34px; height: 7px; border-radius: 5px; }
+		.auth-color-strip span:nth-child(1) { background: #5865f2; }
+		.auth-color-strip span:nth-child(2) { background: #23a55a; }
+		.auth-color-strip span:nth-child(3) { background: #f0b232; }
+		.auth-color-strip span:nth-child(4) { background: #eb459e; }
+		.auth-form-panel { padding: 36px; align-self: center; }
+		.auth-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-bottom: 25px; padding: 4px; border: 1px solid var(--line); border-radius: 5px; background: rgba(237,243,241,.8); }
+		.auth-tab { min-height: 38px; border: 0; border-radius: 3px; color: var(--muted); background: transparent; font-size: 12px; font-weight: 750; }
+		.auth-tab[aria-pressed="true"] { color: var(--green); background: white; box-shadow: 0 2px 8px rgba(29,68,62,.09); }
+		.auth-form-title { margin: 0 0 6px; font-size: 22px; }
+		.auth-form-hint { margin: 0 0 20px; color: var(--muted); font-size: 12px; }
+		.auth-field-label { display: block; margin: 13px 0 6px; color: #536c6d; font-size: 11px; font-weight: 750; }
+		.auth-field { width: 100%; height: 43px; padding: 0 12px; border: 1px solid rgba(61,99,94,.2); border-radius: 4px; color: var(--ink); background: rgba(255,255,255,.84); font-size: 13px; }
+		.auth-field::placeholder { color: #8b9d9b; }
+		.auth-submit { width: 100%; min-height: 44px; margin-top: 20px; border: 0; border-radius: 4px; color: white; background: var(--green); font-size: 13px; font-weight: 750; }
+		.auth-submit:disabled { opacity: .6; cursor: wait; }
+		.auth-status { min-height: 20px; margin: 11px 0 0; color: #a43f2a; font-size: 11px; }
+		.auth-status[data-kind="success"] { color: var(--green); }
+		.auth-privacy { margin: 14px 0 0; color: var(--muted); font-size: 10px; line-height: 1.5; }
+		.auth-gate[hidden], .app-shell[hidden], [hidden] { display: none !important; }
+		.account-area { display: flex; align-items: center; gap: 9px; }
+		.account-avatar { width: 32px; height: 32px; display: grid; place-items: center; flex: 0 0 auto; border: 1px solid rgba(255,255,255,.6); border-radius: 50%; color: white; background: var(--green); font-size: 12px; font-weight: 800; }
+		.account-name { max-width: 150px; overflow: hidden; color: var(--ink); font-size: 12px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+		.user-sync-status { color: var(--muted); font-size: 10px; white-space: nowrap; }
+		.account-button { min-height: 34px; padding: 0 10px; border: 1px solid var(--line); border-radius: 4px; color: var(--green); background: rgba(255,255,255,.65); font-size: 11px; font-weight: 700; }
+		.account-button.logout { color: var(--muted); }
+		.topbar-right { display: flex; align-items: center; gap: 17px; }
+		.profile-layout { display: grid; grid-template-columns: minmax(250px, .8fr) minmax(0, 1.2fr); gap: 18px; align-items: start; }
+		.profile-preview, .profile-settings { min-width: 0; overflow: hidden; border: 1px solid var(--line); border-radius: 6px; background: rgba(255,255,255,.62); box-shadow: var(--shadow); backdrop-filter: blur(18px) saturate(1.2); }
+		.profile-banner { height: 122px; background-color: var(--profile-accent, #176b61); background-image: linear-gradient(135deg, rgba(255,255,255,.18) 25%, transparent 25%, transparent 50%, rgba(255,255,255,.13) 50%, rgba(255,255,255,.13) 75%, transparent 75%); background-size: 28px 28px; }
+		.profile-banner[data-pattern="dots"] { background-image: radial-gradient(rgba(255,255,255,.32) 1.2px, transparent 1.2px); background-size: 16px 16px; }
+		.profile-banner[data-pattern="lines"] { background-image: repeating-linear-gradient(0deg, rgba(255,255,255,.16) 0 1px, transparent 1px 10px); }
+		.profile-banner[data-pattern="solid"] { background-image: none; }
+		.profile-card-body { padding: 0 20px 22px; }
+		.profile-avatar-large { width: 76px; height: 76px; display: grid; place-items: center; margin-top: -38px; border: 5px solid rgba(255,255,255,.92); border-radius: 50%; color: white; background: var(--profile-accent, #176b61); font-size: 27px; font-weight: 800; }
+		.profile-display-name { margin: 13px 0 4px; font-size: 20px; overflow-wrap: anywhere; }
+		.profile-handle { margin: 0 0 14px; color: var(--muted); font-size: 12px; }
+		.profile-bio-preview { min-height: 45px; margin: 0 0 15px; color: #425d5e; font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; }
+		.profile-member { padding-top: 13px; border-top: 1px solid var(--line); color: var(--muted); font-size: 10px; }
+		.profile-settings { padding: 21px; }
+		.profile-settings h2 { margin-bottom: 15px; font-size: 16px; }
+		.profile-label { display: block; margin: 14px 0 6px; color: var(--muted); font-size: 11px; font-weight: 750; }
+		.profile-input, .profile-textarea { width: 100%; min-height: 40px; padding: 9px 11px; border: 1px solid var(--line); border-radius: 4px; color: var(--ink); background: rgba(255,255,255,.82); font-size: 12px; }
+		.profile-textarea { min-height: 74px; resize: vertical; line-height: 1.5; }
+		.profile-colors { display: flex; flex-wrap: wrap; gap: 9px; }
+		.profile-color { width: 30px; height: 30px; padding: 0; border: 3px solid rgba(255,255,255,.9); border-radius: 50%; background: var(--swatch); box-shadow: 0 0 0 1px var(--line); }
+		.profile-color[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--ink); }
+		.profile-patterns { display: grid; grid-template-columns: repeat(5, minmax(0,1fr)); gap: 7px; }
+		.profile-pattern { min-width: 0; padding: 5px; border: 1px solid var(--line); border-radius: 4px; color: var(--muted); background: rgba(255,255,255,.6); font-size: 9px; }
+		.profile-pattern[aria-pressed="true"] { border-color: var(--green); color: var(--green); }
+		.pattern-preview { height: 29px; display: block; margin-bottom: 4px; border-radius: 2px; background-color: var(--green-soft); background-image: linear-gradient(rgba(23,107,97,.14) 1px, transparent 1px), linear-gradient(90deg, rgba(23,107,97,.14) 1px, transparent 1px); background-size: 8px 8px; }
+		.pattern-preview[data-pattern="diagonal"] { background-image: repeating-linear-gradient(135deg, rgba(23,107,97,.16) 0 1px, transparent 1px 7px); }
+		.pattern-preview[data-pattern="dots"] { background-image: radial-gradient(rgba(23,107,97,.3) 1px, transparent 1px); background-size: 8px 8px; }
+		.pattern-preview[data-pattern="lines"] { background-image: repeating-linear-gradient(0deg, rgba(23,107,97,.16) 0 1px, transparent 1px 5px); }
+		.pattern-preview[data-pattern="solid"] { background-image: none; }
+		.profile-save { min-height: 40px; margin-top: 18px; padding: 0 15px; border: 0; border-radius: 4px; color: white; background: var(--green); font-size: 12px; font-weight: 750; }
+		.library-shell { padding: 18px; border: 1px solid var(--line); border-radius: 6px; background: rgba(255,255,255,.52); box-shadow: var(--shadow); backdrop-filter: blur(20px) saturate(1.25); }
+		.library-topline { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 20px; }
+		.library-tabs { display: flex; gap: 4px; padding: 4px; border: 1px solid var(--line); border-radius: 5px; background: rgba(236,243,240,.68); }
+		.library-tab { min-height: 36px; padding: 0 13px; border: 0; border-radius: 3px; color: var(--muted); background: transparent; font-size: 12px; font-weight: 700; }
+		.library-tab[aria-pressed="true"] { color: var(--green); background: rgba(255,255,255,.88); box-shadow: 0 2px 8px rgba(29,68,62,.09); }
+		.library-source { color: var(--muted); font-size: 10px; font-weight: 800; letter-spacing: 1px; }
+		.library-search-form { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 8px; margin-bottom: 13px; }
+		.library-query { width: 100%; min-width: 0; height: 48px; padding: 0 15px; border: 1px solid rgba(61,99,94,.2); border-radius: 4px; color: var(--ink); background: rgba(255,255,255,.78); font-size: 14px; box-shadow: inset 0 1px 2px rgba(30,69,66,.03); }
+		.library-query::placeholder { color: #7f9291; }
+		.library-search-button { min-width: 112px; min-height: 48px; padding: 0 16px; border: 0; border-radius: 4px; color: white; background: var(--green); font-size: 12px; font-weight: 750; }
+		.library-search-button:hover { background: #105b53; }
+		.library-categories { display: flex; gap: 7px; margin-bottom: 24px; overflow-x: auto; padding: 2px 1px 8px; }
+		.library-category { flex: 0 0 auto; min-height: 32px; padding: 0 11px; border: 1px solid var(--line); border-radius: 18px; color: #456465; background: rgba(255,255,255,.5); font-size: 11px; }
+		.library-category:hover { border-color: var(--green); color: var(--green); background: rgba(255,255,255,.82); }
+		.catalog-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin: 0 0 13px; }
+		.catalog-heading h2 { font-size: 16px; }
+		.catalog-status { color: var(--muted); font-size: 11px; }
+		.catalog-grid, .shelf-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+		.book-card { min-width: 0; overflow: hidden; border: 1px solid rgba(61,99,94,.15); border-radius: 5px; background: rgba(255,255,255,.68); box-shadow: 0 8px 22px rgba(30,69,66,.045); backdrop-filter: blur(12px); animation: arrive .22s ease-out both; }
+		.book-cover { position: relative; aspect-ratio: 3 / 3.55; display: grid; place-items: center; overflow: hidden; background: linear-gradient(145deg, #d9e9e3, #edf2e9); }
+		.book-cover[data-tone="1"] { background: linear-gradient(145deg, #f2dfcf, #f5eee2); }
+		.book-cover[data-tone="2"] { background: linear-gradient(145deg, #dce7f1, #e9f0ee); }
+		.book-cover[data-tone="3"] { background: linear-gradient(145deg, #e9dfe9, #f4e8df); }
+		.book-cover[data-tone="4"] { background: linear-gradient(145deg, #d8e6db, #e8eee2); }
+		.book-cover img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+		.book-cover-placeholder { width: 72%; min-height: 74%; display: flex; flex-direction: column; justify-content: space-between; padding: 12px; border: 1px solid rgba(24,42,45,.17); color: #244b48; background: rgba(255,255,255,.48); box-shadow: 5px 7px 16px rgba(24,42,45,.08); }
+		.book-cover-placeholder strong { font-family: Georgia, "Times New Roman", serif; font-size: 13px; line-height: 1.2; overflow-wrap: anywhere; }
+		.book-cover-placeholder span { font-size: 8px; font-weight: 750; letter-spacing: 1px; text-transform: uppercase; }
+		.book-card-body { padding: 11px; }
+		.book-title { display: -webkit-box; min-height: 36px; margin: 0 0 5px; overflow: hidden; color: var(--ink); font-size: 12px; font-weight: 750; line-clamp: 2; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+		.book-byline { min-height: 30px; margin: 0 0 9px; overflow: hidden; color: var(--muted); font-size: 10px; line-height: 1.5; }
+		.book-card-meta { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 9px; color: #687d7b; font-size: 9px; }
+		.book-card-actions { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+		.book-add-button { min-height: 30px; padding: 0 8px; border: 1px solid rgba(23,107,97,.22); border-radius: 3px; color: var(--green); background: rgba(220,238,232,.58); font-size: 10px; font-weight: 750; }
+		.book-add-button:hover:not(:disabled) { background: var(--green-soft); }
+		.book-add-button:disabled { color: #6a8982; cursor: default; }
+		.book-open-link { color: var(--muted); font-size: 10px; text-decoration: none; white-space: nowrap; }
+		.book-open-link:hover { color: var(--green); text-decoration: underline; }
+		.library-empty { grid-column: 1 / -1; padding: 44px 18px; border: 1px dashed rgba(61,99,94,.22); border-radius: 5px; color: var(--muted); text-align: center; font-size: 12px; }
+		.library-empty strong { display: block; margin-bottom: 5px; color: var(--ink); font-size: 14px; }
+		.library-shelf-tools { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 14px; }
+		.library-manual { margin: 0 0 14px; border-bottom: 1px solid var(--line); }
+		.library-manual summary { padding: 9px 0 13px; color: var(--green); cursor: pointer; font-size: 12px; font-weight: 750; }
+		.library-manual .library-form { padding-bottom: 14px; }
+		.shelf-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+		.shelf-card { display: grid; grid-template-columns: 82px minmax(0,1fr); gap: 10px; padding: 9px; }
+		.shelf-card .book-cover { aspect-ratio: 3 / 4; border-radius: 2px; }
+		.shelf-card .book-cover-placeholder { min-height: 72%; padding: 7px; }
+		.shelf-card .book-cover-placeholder strong { font-size: 9px; }
+		.shelf-card .book-card-body { min-width: 0; padding: 2px 0; }
+		.shelf-card .book-title { min-height: auto; }
+		.shelf-card .book-byline { min-height: auto; }
+		.shelf-card .library-status { width: 100%; max-width: 150px; }
+		.shelf-card .book-card-actions { margin-top: 7px; }
+		.shelf-card .book-card-meta { margin-bottom: 5px; }
+		.deck-toolbar { display: flex; align-items: center; gap: 9px; margin-bottom: 20px; }
+		.deck-picker { width: 190px; height: 40px; padding: 0 10px; border: 1px solid var(--line); border-radius: 4px; color: var(--ink); background: var(--surface); font-size: 12px; }
+		.deck-title-input { min-width: 100px; flex: 1; height: 40px; padding: 0 11px; border: 1px solid var(--line); border-radius: 4px; color: var(--ink); background: white; font-size: 13px; font-weight: 700; }
+		.deck-toolbar-actions { display: flex; align-items: center; gap: 7px; }
+		.deck-toolbar-button { min-height: 40px; padding: 0 12px; border: 1px solid var(--line); border-radius: 4px; color: var(--ink); background: var(--surface); font-size: 12px; font-weight: 700; white-space: nowrap; }
+		.deck-toolbar-button:hover { border-color: var(--green); color: var(--green); }
+		.deck-toolbar-button.primary { border-color: var(--green); color: white; background: var(--green); }
+		.deck-toolbar-button.danger { width: 40px; padding: 0; color: #a43f2a; }
+		.deck-save-status { min-width: 48px; color: var(--muted); font-size: 10px; text-align: right; }
+		.theme-picker { display: flex; gap: 8px; margin-bottom: 16px; overflow-x: auto; }
+		.theme-choice { width: 112px; flex: 0 0 auto; padding: 7px; border: 1px solid var(--line); border-radius: 4px; color: var(--muted); background: var(--surface); text-align: left; font-size: 11px; }
+		.theme-choice[aria-pressed="true"] { border-color: var(--green); color: var(--green); box-shadow: inset 0 0 0 1px var(--green); }
+		.theme-swatch { height: 35px; display: flex; align-items: end; gap: 4px; margin-bottom: 6px; padding: 5px; border-radius: 2px; }
+		.theme-swatch i { width: 17px; height: 17px; border-radius: 2px; background: var(--swatch-accent); }
+		.theme-swatch b { width: 35px; height: 6px; margin-bottom: 5px; background: var(--swatch-ink); }
+		.theme-swatch[data-theme="editorial"] { --swatch-accent: #e8784d; --swatch-ink: #285b42; background: #f5f0e6; }
+		.theme-swatch[data-theme="night"] { --swatch-accent: #f1c968; --swatch-ink: #91c5ad; background: #182b3a; }
+		.theme-swatch[data-theme="coral"] { --swatch-accent: #ca4e39; --swatch-ink: #633528; background: #f9e1d6; }
+		.theme-swatch[data-theme="sky"] { --swatch-accent: #3387a2; --swatch-ink: #234959; background: #e2f0f4; }
+		.theme-swatch[data-theme="mono"] { --swatch-accent: #282828; --swatch-ink: #565656; background: #f7f7f4; }
+		.slide-editor { display: grid; grid-template-columns: 156px minmax(250px, 1fr) 236px; gap: 13px; align-items: start; }
+		.slide-rail, .slide-settings { min-width: 0; padding: 13px; border: 1px solid var(--line); border-radius: 5px; background: rgba(255,255,255,.55); backdrop-filter: blur(18px) saturate(1.2); }
+		.slide-rail-heading { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 12px; font-weight: 750; }
+		.slide-list { display: grid; gap: 6px; max-height: 440px; overflow: auto; }
+		.slide-list-item { display: grid; grid-template-columns: minmax(0, 1fr) 28px; gap: 3px; align-items: center; }
+		.slide-thumb { min-width: 0; min-height: 50px; padding: 7px; overflow: hidden; border: 1px solid transparent; border-radius: 3px; color: var(--muted); background: #f2f4ef; text-align: left; font-size: 10px; line-height: 1.35; }
+		.slide-thumb[aria-current="true"] { border-color: var(--green); color: var(--green); background: var(--green-soft); }
+		.slide-thumb strong { display: block; margin-bottom: 2px; font-size: 9px; }
+		.slide-delete { width: 28px; height: 28px; border: 0; border-radius: 3px; color: #899287; background: transparent; font-size: 16px; }
+		.slide-delete:hover { color: #a43f2a; background: var(--orange-soft); }
+		.add-slide-button { width: 100%; min-height: 35px; margin-top: 8px; border: 1px dashed #b8c4b7; border-radius: 3px; color: var(--green); background: transparent; font-size: 11px; font-weight: 700; }
+		.add-slide-button:hover { background: var(--green-soft); }
+		.slide-workarea { min-width: 0; padding: 13px; border: 1px solid rgba(61,99,94,.14); border-radius: 5px; background: rgba(255,255,255,.42); backdrop-filter: blur(16px); }
+		.slide-stage { position: relative; min-width: 0; padding: 13px; border-radius: 4px; background-color: rgba(230,239,235,.72); background-image: linear-gradient(rgba(45,88,80,.045) 1px, transparent 1px), linear-gradient(90deg, rgba(45,88,80,.045) 1px, transparent 1px); background-size: 18px 18px; }
+		.slide-sheet { position: relative; width: 100%; aspect-ratio: 16 / 9; display: flex; flex-direction: column; justify-content: center; padding: 8%; overflow: hidden; border-radius: 3px; color: var(--slide-ink); background: var(--slide-bg); box-shadow: 0 18px 44px rgba(24,42,45,.17); }
+		.slide-sheet::before { position: absolute; top: 0; left: 0; width: 100%; height: 7px; background: var(--slide-accent); content: ""; }
+		.slide-sheet[data-theme="editorial"] { --slide-bg: #f5f0e6; --slide-ink: #24392d; --slide-accent: #e8784d; --slide-muted: #697469; }
+		.slide-sheet[data-theme="night"] { --slide-bg: #182b3a; --slide-ink: #f6f2e8; --slide-accent: #f1c968; --slide-muted: #bed1d0; }
+		.slide-sheet[data-theme="night"]::before { top: 0; left: 0; width: 9px; height: 100%; }
+		.slide-sheet[data-theme="coral"] { --slide-bg: #f9e1d6; --slide-ink: #512f28; --slide-accent: #ca4e39; --slide-muted: #795e53; }
+		.slide-sheet[data-theme="sky"] { --slide-bg: #e2f0f4; --slide-ink: #234959; --slide-accent: #3387a2; --slide-muted: #597680; }
+		.slide-sheet[data-theme="mono"] { --slide-bg: #f7f7f4; --slide-ink: #282828; --slide-accent: #282828; --slide-muted: #6b6b68; }
+		.slide-kicker { margin-bottom: 12px; color: var(--slide-accent); font-size: 9px; font-weight: 850; letter-spacing: 1.4px; text-transform: uppercase; }
+		.slide-preview-title { max-width: 90%; margin: 0 0 14px; color: var(--slide-ink); font-family: Georgia, "Times New Roman", serif; font-size: 30px; font-weight: 700; line-height: 1.12; overflow-wrap: anywhere; }
+		.slide-sheet[data-theme="coral"] .slide-preview-title { font-family: "Aptos", "Segoe UI", sans-serif; font-weight: 800; }
+		.slide-sheet[data-theme="mono"] .slide-preview-title { font-weight: 400; }
+		.slide-bullets { max-width: 90%; display: grid; gap: 7px; margin: 0; padding-left: 17px; color: var(--slide-muted); font-size: 13px; line-height: 1.35; }
+		.slide-bullets li::marker { color: var(--slide-accent); }
+		.slide-footer { position: absolute; right: 8%; bottom: 5%; left: 8%; display: flex; justify-content: space-between; gap: 10px; color: var(--slide-muted); font-size: 9px; }
+		.slide-layout-cover { justify-content: center; }
+		.slide-layout-cover .slide-preview-title { max-width: 80%; margin-bottom: 0; font-size: 38px; }
+		.slide-layout-cover .slide-bullets { display: none; }
+		.slide-layout-cover .slide-kicker { margin-bottom: 16px; }
+		.slide-controls { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 10px; }
+		.slide-controls-group { display: flex; gap: 6px; }
+		.slide-control-button { min-height: 34px; padding: 0 10px; border: 1px solid var(--line); border-radius: 3px; color: var(--ink); background: var(--surface); font-size: 11px; }
+		.slide-control-button:hover:not(:disabled) { border-color: var(--green); color: var(--green); }
+		.slide-control-button:disabled { opacity: .45; cursor: default; }
+		.slide-counter { color: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+		.slide-settings h2 { margin: 0 0 13px; font-size: 13px; }
+		.slide-field-label { display: block; margin: 12px 0 5px; color: var(--muted); font-size: 10px; font-weight: 750; }
+		.slide-input, .slide-textarea, .slide-select { width: 100%; min-height: 36px; padding: 8px; border: 1px solid var(--line); border-radius: 3px; color: var(--ink); background: #fff; font-size: 11px; }
+		.slide-textarea { min-height: 120px; resize: vertical; line-height: 1.5; }
+		.slide-textarea.notes { min-height: 76px; }
+		.slide-help { margin: 5px 0 0; color: var(--muted); font-size: 9px; line-height: 1.4; }
+		.presentation-fullscreen-controls { display: none; }
+		.slide-stage:fullscreen { display: grid; place-items: center; padding: 3vh 3vw; background: #101815; }
+		.slide-stage.is-presenting { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 3vh 3vw; background: #101815; }
+		.slide-stage:fullscreen .slide-sheet { width: min(94vw, 160vh); max-height: 92vh; }
+		.slide-stage.is-presenting .slide-sheet { width: min(94vw, 160vh); max-height: 92vh; }
+		.slide-stage:fullscreen .slide-preview-title { font-size: 46px; }
+		.slide-stage.is-presenting .slide-preview-title { font-size: 46px; }
+		.slide-stage:fullscreen .slide-layout-cover .slide-preview-title { font-size: 58px; }
+		.slide-stage.is-presenting .slide-layout-cover .slide-preview-title { font-size: 58px; }
+		.slide-stage:fullscreen .slide-bullets { gap: 15px; font-size: 20px; }
+		.slide-stage.is-presenting .slide-bullets { gap: 15px; font-size: 20px; }
+		.slide-stage:fullscreen .slide-kicker { font-size: 13px; }
+		.slide-stage.is-presenting .slide-kicker { font-size: 13px; }
+		.slide-stage:fullscreen .slide-footer { font-size: 12px; }
+		.slide-stage.is-presenting .slide-footer { font-size: 12px; }
+		.slide-stage:fullscreen .presentation-fullscreen-controls, .slide-stage.is-presenting .presentation-fullscreen-controls { position: absolute; right: 4vw; bottom: 4vh; left: 4vw; display: flex; justify-content: space-between; }
+		.presentation-fullscreen-controls button { min-width: 42px; min-height: 38px; border: 1px solid rgba(255,255,255,.35); border-radius: 3px; color: white; background: rgba(0,0,0,.35); }
+		#print-deck { display: none; }
+		.toast { position: fixed; right: 22px; bottom: 22px; z-index: 2; padding: 12px 16px; border-radius: 4px; color: white; background: var(--ink); box-shadow: var(--shadow); font-size: 13px; animation: arrive .2s ease-out both; }
+		.toast[hidden] { display: none; }
+		@keyframes arrive { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+		@media (max-width: 980px) {
+			.app-layout { grid-template-columns: 1fr; gap: 0; width: min(680px, 91vw); }
+			.sidebar-nav { position: sticky; top: 0; z-index: 5; margin: 0; padding: 8px 0; overflow: visible; border-bottom: 1px solid var(--line); background: rgba(243,245,239,.96); }
+			.nav-caption { display: none; }
+			.nav-list { display: grid; width: 100%; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; }
+			.nav-button { width: 100%; min-height: 40px; white-space: nowrap; }
+			main { padding-top: 30px; }
+			.workspace { grid-template-columns: 1fr; }
+			.side-column { grid-template-columns: 1fr 1fr; align-items: start; }
+			.focus-panel, .notes-panel { height: 100%; }
+			.task-form { grid-template-columns: 1fr 1fr; }
+			.library-form { grid-template-columns: 1fr 1fr; }
+			.catalog-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+			.shelf-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+			.slide-editor { grid-template-columns: 132px minmax(0, 1fr); }
+			.slide-settings { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 12px; }
+			.slide-settings h2 { grid-column: 1 / -1; }
+			.slide-settings .slide-field-label:first-of-type { grid-column: 1 / -1; }
+			.auth-card { width: min(760px, 100%); }
+			.profile-layout { grid-template-columns: minmax(220px, .85fr) minmax(0, 1.15fr); }
+		}
+		@media (max-width: 540px) {
+			.topbar { height: 64px; padding: 0 5vw; }
+			.brand { font-size: 19px; }
+			.top-date { font-size: 11px; }
+			.app-layout { width: 90vw; }
+			.sidebar-nav { overflow-x: auto; }
+			.nav-list { display: flex; width: max-content; flex-wrap: nowrap; }
+			.nav-button { width: auto; }
+			main { padding-top: 24px; }
+			.welcome { align-items: start; flex-direction: column; gap: 13px; margin-bottom: 22px; }
+			h1 { font-size: 30px; }
+			.stats { gap: 7px; }
+			.stat { min-height: 88px; padding: 13px 11px; }
+			.stat-label { font-size: 10px; }
+			.stat-value { font-size: 22px; }
+			.tasks-panel { padding: 16px 13px; }
+			.task-form { grid-template-columns: 1fr 1fr; }
+			.task-form .field:first-child { grid-column: 1 / -1; }
+			.task-form button { grid-column: 1 / -1; }
+			.task-toolbar { align-items: start; flex-direction: column; }
+			.search { width: 100%; }
+			.side-column { grid-template-columns: 1fr; }
+			.focus-panel { min-height: 335px; }
+			.notes-panel { min-height: 240px; }
+			.library-section { padding: 16px 13px; }
+			.library-toolbar { align-items: stretch; flex-direction: column; }
+			.library-search, .library-filter { width: 100%; }
+			.library-row { grid-template-columns: 1fr; gap: 9px; }
+			.library-actions { justify-content: space-between; }
+			.library-shell { padding: 12px; }
+			.library-topline { align-items: start; flex-direction: column; }
+			.library-source { align-self: end; }
+			.library-search-form { grid-template-columns: minmax(0,1fr) auto; }
+			.library-search-button { min-width: 84px; padding: 0 10px; }
+			.catalog-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+			.shelf-grid { grid-template-columns: minmax(0,1fr); }
+			.book-card-body { padding: 9px; }
+			.shelf-card { grid-template-columns: 78px minmax(0,1fr); }
+			.deck-toolbar { flex-wrap: wrap; }
+			.deck-picker { flex: 1; }
+			.deck-title-input { order: 3; flex-basis: 100%; }
+			.deck-toolbar-actions { margin-left: auto; }
+			.deck-save-status { display: none; }
+			.slide-editor { grid-template-columns: minmax(0, 1fr); }
+			.slide-workarea { order: 1; }
+			.slide-rail { order: 2; }
+			.slide-settings { order: 3; display: block; }
+			.slide-settings h2 { margin-bottom: 10px; }
+			.slide-preview-title { font-size: 24px; }
+			.slide-layout-cover .slide-preview-title { font-size: 29px; }
+			.auth-gate { padding: 16px 5vw; }
+			.auth-card { grid-template-columns: 1fr; }
+			.auth-intro { min-height: auto; padding: 22px; }
+			.auth-intro h1 { margin: 22px 0 8px; font-size: 29px; }
+			.auth-intro-copy { font-size: 11px; }
+			.auth-color-strip { margin-top: 14px; }
+			.auth-form-panel { padding: 22px; }
+			.profile-layout { grid-template-columns: 1fr; }
+			.profile-patterns { grid-template-columns: repeat(5, minmax(0,1fr)); }
+			.account-name { display: none; }
+			.topbar-right { gap: 8px; }
+			.account-area { gap: 5px; }
+		}
+		@media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+		@media print {
+			@page { size: 13.333in 7.5in; margin: 0; }
+			body { min-width: 0; background: white; }
+			.app-shell, .toast { display: none !important; }
+			#print-deck { display: block; }
+			.print-slide { position: relative; width: 100%; height: 100vh; display: flex; flex-direction: column; justify-content: center; padding: 9%; overflow: hidden; color: var(--slide-ink); background: var(--slide-bg); break-after: page; page-break-after: always; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+			.print-slide::before { position: absolute; inset: 0 auto 0 0; width: 9px; background: var(--slide-accent); content: ""; }
+			.print-slide[data-theme="editorial"] { --slide-bg: #f5f0e6; --slide-ink: #24392d; --slide-accent: #e8784d; --slide-muted: #697469; }
+			.print-slide[data-theme="night"] { --slide-bg: #182b3a; --slide-ink: #f6f2e8; --slide-accent: #f1c968; --slide-muted: #bed1d0; }
+			.print-slide[data-theme="coral"] { --slide-bg: #f9e1d6; --slide-ink: #512f28; --slide-accent: #ca4e39; --slide-muted: #795e53; }
+			.print-slide[data-theme="sky"] { --slide-bg: #e2f0f4; --slide-ink: #234959; --slide-accent: #3387a2; --slide-muted: #597680; }
+			.print-slide[data-theme="mono"] { --slide-bg: #f7f7f4; --slide-ink: #282828; --slide-accent: #282828; --slide-muted: #6b6b68; }
+			.print-slide h1 { max-width: 85%; color: var(--slide-ink); font: 700 34pt/1.12 Georgia, "Times New Roman", serif; }
+			.print-slide ul { display: grid; gap: 12pt; padding-left: 22pt; color: var(--slide-muted); font-size: 18pt; }
+			.print-slide li::marker { color: var(--slide-accent); }
+			.print-slide footer { position: absolute; right: 9%; bottom: 5%; left: 9%; display: flex; justify-content: space-between; color: var(--slide-muted); font-size: 10pt; }
+			.print-slide.is-cover ul { display: none; }
+		}
+	</style>
+</head>
+<body>
+	<section class="auth-gate" id="auth-gate" aria-labelledby="auth-heading">
+		<div class="auth-card">
+			<div class="auth-intro">
+				<div>
+					<div class="brand"><span class="brand-mark" aria-hidden="true">o</span> oqim</div>
+					<h1 id="auth-heading">O‘qish joyingiz o‘zingizniki.</h1>
+					<p class="auth-intro-copy">Rejalar, kitoblar, qaydlar va taqdimotlar shaxsiy profilingizda saqlanadi.</p>
+				</div>
+				<div class="auth-color-strip" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+			</div>
+			<div class="auth-form-panel">
+				<div class="auth-tabs" role="group" aria-label="Akkaunt amali">
+					<button class="auth-tab" type="button" data-auth-mode="login" aria-pressed="true">Kirish</button>
+					<button class="auth-tab" type="button" data-auth-mode="register" aria-pressed="false">Ro‘yxatdan o‘tish</button>
+				</div>
+				<h2 class="auth-form-title" id="auth-form-title">Akkauntingizga kiring</h2>
+				<p class="auth-form-hint" id="auth-form-hint">Shaxsiy o‘qish maydoningizga qayting.</p>
+				<form id="auth-form">
+					<div id="auth-register-fields" hidden>
+						<label class="auth-field-label" for="auth-display-name">Profil nomi</label>
+						<input class="auth-field" id="auth-display-name" name="displayName" maxlength="32" autocomplete="name" placeholder="Ismingiz">
+					</div>
+					<label class="auth-field-label" for="auth-username">Login</label>
+					<input class="auth-field" id="auth-username" name="username" minlength="3" maxlength="24" autocomplete="username" required placeholder="Masalan, ali_23">
+					<label class="auth-field-label" for="auth-password">Parol</label>
+					<input class="auth-field" id="auth-password" name="password" type="password" minlength="10" maxlength="128" autocomplete="current-password" required placeholder="Kamida 10 ta belgi">
+					<button class="auth-submit" id="auth-submit" type="submit">Kirish</button>
+					<p class="auth-status" id="auth-status" role="status" aria-live="polite"></p>
+				</form>
+				<p class="auth-privacy">Parol ochiq ko‘rinishda saqlanmaydi. Har bir akkaunt faqat o‘z ma’lumotlarini oladi.</p>
+			</div>
+		</div>
+	</section>
+	<div class="app-shell" id="app-shell" hidden>
+		<header class="topbar">
+			<div class="brand"><span class="brand-mark" aria-hidden="true">o</span> oqim</div>
+			<div class="topbar-right">
+				<div class="top-date" id="top-date"></div>
+				<div class="account-area" id="account-area" hidden>
+					<span class="account-avatar" id="account-avatar">O</span>
+					<span class="account-name" id="account-name"></span>
+					<span class="user-sync-status" id="sync-status">Saqlandi</span>
+					<button class="account-button" type="button" data-view="profile">Profil</button>
+					<button class="account-button logout" id="logout-button" type="button">Chiqish</button>
+				</div>
+			</div>
+		</header>
+
+		<div class="app-layout">
+			<nav class="sidebar-nav" aria-label="Asosiy bo‘limlar">
+				<p class="nav-caption">O‘QISH MARKAZI</p>
+				<div class="nav-list">
+					<button class="nav-button" type="button" data-view="home"><span class="nav-icon">01</span> Umumiy</button>
+					<button class="nav-button" type="button" data-view="tasks"><span class="nav-icon">02</span> Vazifalar</button>
+					<button class="nav-button" type="button" data-view="library"><span class="nav-icon">03</span> Kutubxona</button>
+					<button class="nav-button" type="button" data-view="focus"><span class="nav-icon">04</span> Fokus taymeri</button>
+					<button class="nav-button" type="button" data-view="notes"><span class="nav-icon">05</span> Qaydlar</button>
+					<button class="nav-button" type="button" data-view="slides"><span class="nav-icon">06</span> Taqdimotlar</button>
+					<button class="nav-button" type="button" data-view="profile"><span class="nav-icon">07</span> Profil</button>
+				</div>
+			</nav>
+
+			<main>
+				<section class="view-panel" id="view-home" data-view-panel="home">
+					<section class="welcome" aria-labelledby="welcome-title">
+						<div>
+							<p class="eyebrow">Talaba uchun kundalik yordamchi</p>
+							<h1 id="welcome-title">Bugun nimaga ulguramiz?</h1>
+							<p class="welcome-copy">Rejangizni tuzing, diqqatingizni jamlang, oldinga yuring.</p>
+						</div>
+						<div class="day-chip" id="today-chip"></div>
+					</section>
+					<section class="stats" aria-label="Bugungi ko‘rsatkichlar">
+						<div class="stat"><div class="stat-label">Bajarilishi kerak</div><div class="stat-value"><span id="open-count">0</span><small>ta vazifa</small></div></div>
+						<div class="stat"><div class="stat-label">Bajarildi</div><div class="stat-value"><span id="done-count">0</span><small>ta vazifa</small></div></div>
+						<div class="stat"><div class="stat-label">Bugungi fokus</div><div class="stat-value"><span id="focus-count">0</span><small>daqiqa</small></div></div>
+					</section>
+				</section>
+
+				<section class="view-panel" id="view-tasks" data-view-panel="tasks" hidden>
+					<div class="view-heading"><p class="eyebrow">Rejalashtirish</p><h1>Vazifalar</h1><p>Muddatlarni kuzating va bajarilgan ishlarni belgilang.</p></div>
+					<section class="panel tasks-panel" aria-labelledby="tasks-heading">
+						<div class="panel-heading"><h2 id="tasks-heading">Vazifalar ro‘yxati</h2><span class="count-pill" id="task-total">0 ta</span></div>
+						<form class="task-form" id="task-form">
+							<input class="field" id="task-title" name="title" maxlength="100" placeholder="Masalan, biologiyadan referat" aria-label="Vazifa nomi" required>
+							<input class="field" id="task-subject" name="subject" maxlength="35" placeholder="Fan" aria-label="Fan nomi">
+							<input class="field" id="task-date" name="due" type="date" aria-label="Bajarish muddati">
+							<button class="primary-button" type="submit">+ Qo‘shish</button>
+						</form>
+						<div class="task-toolbar">
+							<div class="filters" role="group" aria-label="Vazifalarni filtrlash">
+								<button class="filter-button" type="button" data-filter="all" aria-pressed="true">Hammasi</button>
+								<button class="filter-button" type="button" data-filter="open" aria-pressed="false">Faol</button>
+								<button class="filter-button" type="button" data-filter="done" aria-pressed="false">Bajarilgan</button>
+							</div>
+							<input class="search" id="task-search" type="search" placeholder="Vazifani izlash" aria-label="Vazifalarni izlash">
+						</div>
+						<div class="task-list" id="task-list" aria-live="polite"></div>
+					</section>
+				</section>
+
+				<section class="view-panel" id="view-library" data-view-panel="library" hidden>
+					<div class="view-heading"><p class="eyebrow">Kitoblar va ilmiy manbalar</p><h1>Kutubxona</h1><p>Jahon katalogidan toping, shaxsiy javoningizga jamlang.</p></div>
+					<section class="library-shell" aria-labelledby="library-heading">
+						<div class="library-topline">
+							<div class="library-tabs" role="group" aria-label="Kutubxona bo‘limlari">
+								<button class="library-tab" type="button" data-library-view="catalog" aria-pressed="true">Katalog</button>
+								<button class="library-tab" type="button" data-library-view="shelf" aria-pressed="false">Mening javonim <span id="library-total">0</span></button>
+							</div>
+							<span class="library-source">OPEN LIBRARY · GLOBAL CATALOG</span>
+						</div>
+						<div id="library-discovery-tools">
+						<form class="library-search-form" id="catalog-search-form">
+							<input class="library-query" id="catalog-query" type="search" maxlength="100" placeholder="Kitob, muallif yoki mavzu izlash" aria-label="Katalogdan kitob izlash">
+							<button class="library-search-button" type="submit">Izlash <span aria-hidden="true">↗</span></button>
+						</form>
+						<div class="library-categories" role="group" aria-label="Ommabop mavzular">
+							<button class="library-category" type="button" data-catalog-query="subject:computer_science" data-catalog-label="Kompyuter fanlari">Kompyuter fanlari</button>
+							<button class="library-category" type="button" data-catalog-query="subject:biology" data-catalog-label="Biologiya">Biologiya</button>
+							<button class="library-category" type="button" data-catalog-query="subject:psychology" data-catalog-label="Psixologiya">Psixologiya</button>
+							<button class="library-category" type="button" data-catalog-query="subject:history" data-catalog-label="Tarix">Tarix</button>
+							<button class="library-category" type="button" data-catalog-query="subject:fiction" data-catalog-label="Badiiy adabiyot">Badiiy adabiyot</button>
+							<button class="library-category" type="button" data-catalog-query="subject:business" data-catalog-label="Biznes">Biznes</button>
+						</div>
+						</div>
+						<div id="library-catalog-view">
+							<div class="catalog-heading"><h2 id="library-heading">Mashhur kitoblar</h2><span class="catalog-status" id="catalog-status" role="status">Katalog yuklanmoqda...</span></div>
+							<div class="catalog-grid" id="catalog-results" aria-live="polite"></div>
+						</div>
+						<div id="library-shelf-view" hidden>
+							<div class="library-shelf-tools">
+								<input class="library-search" id="library-search" type="search" placeholder="Javondan izlash" aria-label="Javondan izlash">
+								<select class="library-filter" id="library-filter" aria-label="O‘qish holati bo‘yicha filtrlash">
+									<option value="all">Barcha holatlar</option><option value="plan">O‘qish rejasida</option><option value="reading">O‘qilyapti</option><option value="read">O‘qilgan</option>
+								</select>
+							</div>
+							<details class="library-manual">
+								<summary>O‘z kitobim yoki manbamni kiritish</summary>
+								<form class="library-form" id="library-form">
+									<input class="field" id="book-title" maxlength="120" placeholder="Kitob yoki material nomi" aria-label="Kitob yoki material nomi" required>
+									<input class="field" id="book-author" maxlength="70" placeholder="Muallif" aria-label="Muallif">
+									<input class="field" id="book-subject" maxlength="40" placeholder="Fan yoki bo‘lim" aria-label="Fan yoki bo‘lim">
+									<input class="field" id="book-url" type="url" placeholder="Havola (ixtiyoriy)" aria-label="Material havolasi">
+									<button class="primary-button" type="submit">+ Javonga qo‘shish</button>
+								</form>
+							</details>
+							<div class="shelf-grid" id="library-list" aria-live="polite"></div>
+						</div>
+					</section>
+				</section>
+
+				<section class="view-panel" id="view-focus" data-view-panel="focus" hidden>
+					<div class="view-heading"><p class="eyebrow">Diqqatni jamlash</p><h1>Fokus taymeri</h1><p>O‘qish va qisqa tanaffus vaqtini navbatlang.</p></div>
+					<section class="panel focus-panel" aria-labelledby="focus-heading">
+						<div class="panel-heading"><h2 id="focus-heading">Pomodoro</h2><span class="focus-mode" id="timer-mode">Diqqat vaqti</span></div>
+						<div class="timer-face"><div class="timer-ring"><span class="timer-time" id="timer-time" aria-live="off">25:00</span></div></div>
+						<div class="timer-controls"><button class="timer-button primary" id="timer-toggle" type="button">Boshlash</button><button class="timer-button" id="timer-reset" type="button">Qayta boshlash</button></div>
+						<button class="timer-switch" id="timer-switch" type="button">Tanaffus taymeriga o‘tish</button>
+					</section>
+				</section>
+
+				<section class="view-panel" id="view-notes" data-view-panel="notes" hidden>
+					<div class="view-heading"><p class="eyebrow">Tez yozuvlar</p><h1>Qaydlar</h1><p>G‘oya va eslatmalaringiz avtomatik saqlanadi.</p></div>
+					<section class="panel notes-panel" aria-labelledby="notes-heading">
+						<div class="panel-heading"><h2 id="notes-heading">Shaxsiy qaydlar</h2><span aria-hidden="true">✎</span></div>
+						<textarea class="notes-area" id="notes" maxlength="2000" placeholder="Qayd yozishni boshlang..." aria-label="Tezkor qaydlar"></textarea>
+						<div class="notes-status"><span id="save-status">Avtomatik saqlanadi</span><span id="note-length">0 / 2000</span></div>
+					</section>
+				</section>
+
+				<section class="view-panel" id="view-profile" data-view-panel="profile" hidden>
+					<div class="view-heading"><p class="eyebrow">Shaxsiy maydon</p><h1>Profil</h1><p>Ko‘rinishingiz va o‘zingiz haqingizdagi ma’lumotni sozlang.</p></div>
+					<div class="profile-layout">
+						<section class="profile-preview" aria-label="Profil ko‘rinishi">
+							<div class="profile-banner" id="profile-banner" data-pattern="grid"></div>
+							<div class="profile-card-body">
+								<div class="profile-avatar-large" id="profile-avatar">O</div>
+								<h2 class="profile-display-name" id="profile-preview-name">Profil nomi</h2>
+								<p class="profile-handle" id="profile-preview-handle">@login</p>
+								<p class="profile-bio-preview" id="profile-preview-bio"></p>
+								<div class="profile-member" id="profile-member">Oqim a’zosi</div>
+							</div>
+						</section>
+						<form class="profile-settings" id="profile-form">
+							<h2>Profilni bezash</h2>
+							<label class="profile-label" for="profile-display-name-input">Ko‘rinadigan ism</label>
+							<input class="profile-input" id="profile-display-name-input" maxlength="32" required>
+							<label class="profile-label" for="profile-bio-input">Bio</label>
+							<textarea class="profile-textarea" id="profile-bio-input" maxlength="160" placeholder="O‘zingiz haqingizda qisqacha"></textarea>
+							<span class="profile-label">Rang</span>
+							<div class="profile-colors" role="group" aria-label="Profil rangi">
+								<button class="profile-color" type="button" data-profile-color="#176b61" style="--swatch:#176b61" aria-label="Yashil" aria-pressed="false"></button>
+								<button class="profile-color" type="button" data-profile-color="#5865f2" style="--swatch:#5865f2" aria-label="Ko‘k-binafsha" aria-pressed="false"></button>
+								<button class="profile-color" type="button" data-profile-color="#23a55a" style="--swatch:#23a55a" aria-label="Yashil" aria-pressed="false"></button>
+								<button class="profile-color" type="button" data-profile-color="#f0b232" style="--swatch:#f0b232" aria-label="Sariq" aria-pressed="false"></button>
+								<button class="profile-color" type="button" data-profile-color="#eb459e" style="--swatch:#eb459e" aria-label="Pushti" aria-pressed="false"></button>
+								<button class="profile-color" type="button" data-profile-color="#f23f43" style="--swatch:#f23f43" aria-label="Qizil" aria-pressed="false"></button>
+								<button class="profile-color" type="button" data-profile-color="#00a8fc" style="--swatch:#00a8fc" aria-label="Moviy" aria-pressed="false"></button>
+							</div>
+							<span class="profile-label">Fon naqshi</span>
+							<div class="profile-patterns" role="group" aria-label="Profil fon naqshi">
+								<button class="profile-pattern" type="button" data-profile-pattern="grid" aria-pressed="false"><span class="pattern-preview" data-pattern="grid"></span>To‘r</button>
+								<button class="profile-pattern" type="button" data-profile-pattern="diagonal" aria-pressed="false"><span class="pattern-preview" data-pattern="diagonal"></span>Qiya</button>
+								<button class="profile-pattern" type="button" data-profile-pattern="dots" aria-pressed="false"><span class="pattern-preview" data-pattern="dots"></span>Nuqta</button>
+								<button class="profile-pattern" type="button" data-profile-pattern="lines" aria-pressed="false"><span class="pattern-preview" data-pattern="lines"></span>Chiziq</button>
+								<button class="profile-pattern" type="button" data-profile-pattern="solid" aria-pressed="false"><span class="pattern-preview" data-pattern="solid"></span>Sodda</button>
+							</div>
+							<button class="profile-save" type="submit">Profilni saqlash</button>
+							<p class="auth-status" id="profile-status" role="status" aria-live="polite"></p>
+						</form>
+					</div>
+				</section>
+
+				<section class="view-panel" id="view-slides" data-view-panel="slides" hidden>
+					<div class="view-heading"><p class="eyebrow">Taqdimot ustaxonasi</p><h1>Taqdimotlar</h1><p>Slaydlaringizni yarating, bezang va namoyish qiling.</p></div>
+					<div class="deck-toolbar">
+						<select class="deck-picker" id="deck-picker" aria-label="Taqdimotni tanlash"></select>
+						<input class="deck-title-input" id="deck-title" maxlength="80" aria-label="Taqdimot nomi">
+						<span class="deck-save-status" id="deck-save-status" role="status">Saqlandi</span>
+						<div class="deck-toolbar-actions">
+							<button class="deck-toolbar-button" id="new-deck" type="button">+ Yangi</button>
+							<button class="deck-toolbar-button" id="present-deck" type="button">▶ Namoyish</button>
+							<button class="deck-toolbar-button primary" id="export-deck" type="button">PDF chiqarish</button>
+							<button class="deck-toolbar-button danger" id="delete-deck" type="button" aria-label="Taqdimotni o‘chirish" title="Taqdimotni o‘chirish">×</button>
+						</div>
+					</div>
+					<div class="theme-picker" role="group" aria-label="Dizayn shablonlari">
+						<button class="theme-choice" type="button" data-theme-choice="editorial" aria-pressed="false"><span class="theme-swatch" data-theme="editorial"><i></i><b></b></span>Nashriyot</button>
+						<button class="theme-choice" type="button" data-theme-choice="night" aria-pressed="false"><span class="theme-swatch" data-theme="night"><i></i><b></b></span>Tungi</button>
+						<button class="theme-choice" type="button" data-theme-choice="coral" aria-pressed="false"><span class="theme-swatch" data-theme="coral"><i></i><b></b></span>Marjon</button>
+						<button class="theme-choice" type="button" data-theme-choice="sky" aria-pressed="false"><span class="theme-swatch" data-theme="sky"><i></i><b></b></span>Osmon</button>
+						<button class="theme-choice" type="button" data-theme-choice="mono" aria-pressed="false"><span class="theme-swatch" data-theme="mono"><i></i><b></b></span>Minimal</button>
+					</div>
+					<div class="slide-editor">
+						<aside class="slide-rail" aria-label="Slaydlar ro‘yxati">
+							<div class="slide-rail-heading"><span>Slaydlar</span><span class="count-pill" id="slide-total">1</span></div>
+							<div class="slide-list" id="slide-list"></div>
+							<button class="add-slide-button" id="add-slide" type="button">+ Slayd qo‘shish</button>
+						</aside>
+						<div class="slide-workarea">
+							<div class="slide-stage" id="slide-stage" aria-label="Slayd ko‘rinishi">
+								<div class="slide-sheet" id="slide-sheet" data-theme="editorial">
+									<div class="slide-kicker" id="slide-kicker">TAQDIMOT</div>
+									<h2 class="slide-preview-title" id="slide-preview-title">Sarlavha</h2>
+									<ul class="slide-bullets" id="slide-bullets"></ul>
+									<footer class="slide-footer"><span id="slide-footer-title">Yangi taqdimot</span><span id="slide-number">01 / 01</span></footer>
+								</div>
+								<div class="presentation-fullscreen-controls">
+									<button type="button" id="present-previous" aria-label="Oldingi slayd">←</button>
+									<button type="button" id="present-next" aria-label="Keyingi slayd">→</button>
+									<button type="button" id="exit-present" aria-label="Namoyishni yopish">×</button>
+								</div>
+							</div>
+							<div class="slide-controls">
+								<div class="slide-controls-group"><button class="slide-control-button" id="move-slide-up" type="button" aria-label="Slaydni oldinga surish" title="Slaydni oldinga surish">↑</button><button class="slide-control-button" id="move-slide-down" type="button" aria-label="Slaydni orqaga surish" title="Slaydni orqaga surish">↓</button></div>
+								<span class="slide-counter" id="slide-counter">1 / 1</span>
+								<div class="slide-controls-group"><button class="slide-control-button" id="slide-previous" type="button">Oldingi</button><button class="slide-control-button" id="slide-next" type="button">Keyingi</button></div>
+							</div>
+						</div>
+						<aside class="slide-settings" aria-label="Slayd matnini tahrirlash">
+							<h2>Slayd matni</h2>
+							<label class="slide-field-label" for="slide-layout">Tuzilishi</label>
+							<select class="slide-select" id="slide-layout"><option value="cover">Muqova</option><option value="content">Sarlavha va fikrlar</option></select>
+							<label class="slide-field-label" for="slide-title">Sarlavha</label>
+							<input class="slide-input" id="slide-title" maxlength="100" placeholder="Slayd sarlavhasi">
+							<label class="slide-field-label" for="slide-body">Asosiy fikrlar</label>
+							<textarea class="slide-textarea" id="slide-body" maxlength="1200" placeholder="Har bir yangi qator alohida punkt bo‘ladi"></textarea>
+							<p class="slide-help">Har bir yangi qator slaydda alohida punkt sifatida chiqadi.</p>
+							<label class="slide-field-label" for="slide-notes">Ma’ruzachi qaydi</label>
+							<textarea class="slide-textarea notes" id="slide-notes" maxlength="1000" placeholder="Faqat o‘zingiz uchun eslatma"></textarea>
+						</aside>
+					</div>
+				</section>
+			</main>
+		</div>
+	</div>
+	<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+	<div id="print-deck" aria-hidden="true"></div>
+
+	<script>
+		(() => {
+			const storageKeys = { tasks: "oqim.tasks.v1", notes: "oqim.notes.v1", focus: "oqim.focus.v1", library: "oqim.library.v1", presentations: "oqim.presentations.v1", activeDeck: "oqim.activeDeck.v1" };
+			const dataFields = new Map([
+				[storageKeys.tasks, "tasks"],
+				[storageKeys.notes, "notes"],
+				[storageKeys.focus, "focus"],
+				[storageKeys.library, "library"],
+				[storageKeys.presentations, "presentations"],
+				[storageKeys.activeDeck, "activeDeck"]
+			]);
+			let currentUser = null;
+			let currentData = createEmptyUserData();
+			let dataSaveTimeout = null;
+			let dataSaveQueue = Promise.resolve();
+			let authMode = "login";
+			let profileDraft = null;
+			function createEmptyUserData() {
+				return { tasks: [], notes: "", focus: null, library: [], presentations: [], activeDeck: "" };
+			}
+			const viewButtons = document.querySelectorAll("[data-view]");
+			const viewPanels = document.querySelectorAll("[data-view-panel]");
+			function activateView(viewName) {
+				viewPanels.forEach(panel => { panel.hidden = panel.dataset.viewPanel !== viewName; });
+				viewButtons.forEach(button => {
+					if (button.dataset.view === viewName) button.setAttribute("aria-current", "page");
+					else button.removeAttribute("aria-current");
+				});
+				try { localStorage.setItem("oqim.activeView.v1", viewName); } catch {}
+			}
+			viewButtons.forEach(button => button.addEventListener("click", () => activateView(button.dataset.view)));
+			const readStorage = (key, fallback) => {
+				const field = dataFields.get(key);
+				if (field) return currentData[field] === undefined ? fallback : currentData[field];
+				if (key !== "oqim.activeView.v1") return fallback;
+				try {
+					const value = localStorage.getItem(key);
+					return value === null ? fallback : JSON.parse(value);
+				} catch {
+					return fallback;
+				}
+			};
+			const saveStorage = (key, value) => {
+				if (key === "oqim.activeView.v1") {
+					try { localStorage.setItem(key, String(value)); return true; } catch { return false; }
+				}
+				const field = dataFields.get(key);
+				if (!field || !currentUser) return false;
+				currentData[field] = value;
+				queueDataSave();
+				return true;
+			};
+			async function sendDataSnapshot(userId, snapshot) {
+				const response = await fetch("/api/data", {
+					method: "PUT",
+					credentials: "same-origin",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({ data: snapshot })
+				});
+				if (!response.ok) throw new Error("Ma’lumotlarni serverga saqlab bo‘lmadi.");
+				if (currentUser && currentUser.id === userId) document.getElementById("sync-status").textContent = "Saqlandi";
+			}
+			function queueDataSave() {
+				if (!currentUser) return;
+				const userId = currentUser.id;
+				document.getElementById("sync-status").textContent = "Saqlanmoqda…";
+				clearTimeout(dataSaveTimeout);
+				dataSaveTimeout = setTimeout(() => {
+					const snapshot = JSON.parse(JSON.stringify(currentData));
+					dataSaveQueue = dataSaveQueue.catch(() => {}).then(() => {
+						if (!currentUser || currentUser.id !== userId) return;
+						return sendDataSnapshot(userId, snapshot);
+					}).catch(() => {
+						if (currentUser && currentUser.id === userId) document.getElementById("sync-status").textContent = "Saqlanmadi";
+					});
+				}, 350);
+			}
+			function flushDataSave() {
+				clearTimeout(dataSaveTimeout);
+				if (!currentUser) return dataSaveQueue;
+				const userId = currentUser.id;
+				const snapshot = JSON.parse(JSON.stringify(currentData));
+				dataSaveQueue = dataSaveQueue.catch(() => {}).then(() => sendDataSnapshot(userId, snapshot));
+				return dataSaveQueue;
+			}
+			async function apiRequest(path, options = {}) {
+				const response = await fetch(path, {
+					...options,
+					credentials: "same-origin",
+					headers: { ...(options.body ? { "Content-Type": "application/json" } : {}), ...(options.headers || {}) }
+				});
+				const payload = response.status === 204 ? null : await response.json().catch(() => ({}));
+				if (!response.ok) {
+					const error = new Error(payload?.error || "Server so‘rovni bajara olmadi.");
+					error.status = response.status;
+					throw error;
+				}
+				return payload;
+			}
+			const today = new Date();
+			const dayKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+			const tasks = readStorage(storageKeys.tasks, []).filter(task => task && typeof task.id === "string" && typeof task.title === "string");
+			const libraryItems = readStorage(storageKeys.library, []).filter(item => item && typeof item.id === "string" && typeof item.title === "string");
+			const themeNames = ["editorial", "night", "coral", "sky", "mono"];
+			const storedPresentations = readStorage(storageKeys.presentations, []);
+			const presentations = (Array.isArray(storedPresentations) ? storedPresentations : [])
+				.filter(presentation => presentation && typeof presentation.id === "string" && Array.isArray(presentation.slides))
+				.map(presentation => ({
+					...presentation,
+					theme: themeNames.includes(presentation.theme) ? presentation.theme : "editorial",
+					slides: presentation.slides.filter(slide => slide && typeof slide.id === "string").map(slide => ({ layout: "content", title: "", body: "", notes: "", ...slide }))
+				}));
+			presentations.forEach(presentation => { if (presentation.slides.length === 0) presentation.slides.push(createSlide()); });
+			if (presentations.length === 0) presentations.push(createPresentation());
+			const savedDeckId = readStorage(storageKeys.activeDeck, "");
+			let activePresentation = presentations.find(presentation => presentation.id === savedDeckId) || presentations[0];
+			let activeSlideIndex = 0;
+			let activeFilter = "all";
+			let searchTerm = "";
+			let librarySearchTerm = "";
+			let libraryFilter = "all";
+			let activeLibraryView = "catalog";
+			let catalogDocs = [];
+			let catalogRequestId = 0;
+			let catalogHeading = "Mashhur kitoblar";
+			let toastTimeout;
+			let timerInterval = null;
+			let timerMode = "focus";
+			let timerSeconds = 25 * 60;
+			let timerRunning = false;
+			let focusMinutes = readStorage(storageKeys.focus, { date: dayKey, minutes: 0 });
+			if (!focusMinutes || focusMinutes.date !== dayKey) focusMinutes = { date: dayKey, minutes: 0 };
+
+			function createSlide(layout = "cover") {
+				return { id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`, layout, title: "", body: "", notes: "" };
+			}
+			function createPresentation() {
+				return { id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`, title: "Yangi taqdimot", theme: "editorial", slides: [createSlide()] };
+			}
+
+			const taskList = document.getElementById("task-list");
+			const dateText = new Intl.DateTimeFormat("uz-UZ", { weekday: "long", day: "numeric", month: "long" });
+			document.getElementById("top-date").textContent = dateText.format(today);
+			document.getElementById("today-chip").textContent = new Intl.DateTimeFormat("uz-UZ", { day: "numeric", month: "long", year: "numeric" }).format(today);
+
+			function showToast(message) {
+				const toast = document.getElementById("toast");
+				toast.textContent = message;
+				toast.hidden = false;
+				clearTimeout(toastTimeout);
+				toastTimeout = setTimeout(() => { toast.hidden = true; }, 2400);
+			}
+
+			const accentSoftColors = {
+				"#176b61": "rgba(23,107,97,.13)", "#5865f2": "rgba(88,101,242,.13)", "#23a55a": "rgba(35,165,90,.13)",
+				"#f0b232": "rgba(240,178,50,.17)", "#eb459e": "rgba(235,69,158,.13)", "#f23f43": "rgba(242,63,67,.13)", "#00a8fc": "rgba(0,168,252,.13)"
+			};
+			function setAuthStatus(message, success = false) {
+				const status = document.getElementById("auth-status");
+				status.textContent = message;
+				status.dataset.kind = success ? "success" : "error";
+			}
+			function setAuthMode(mode) {
+				authMode = mode;
+				const registering = mode === "register";
+				document.getElementById("auth-register-fields").hidden = !registering;
+				document.getElementById("auth-display-name").required = registering;
+				document.getElementById("auth-password").autocomplete = registering ? "new-password" : "current-password";
+				document.getElementById("auth-form-title").textContent = registering ? "Yangi akkaunt yarating" : "Akkauntingizga kiring";
+				document.getElementById("auth-form-hint").textContent = registering ? "Login, parol va profilingiz uchun ism tanlang." : "Shaxsiy o‘qish maydoningizga qayting.";
+				document.getElementById("auth-submit").textContent = registering ? "Akkaunt yaratish" : "Kirish";
+				document.querySelectorAll("[data-auth-mode]").forEach(button => button.setAttribute("aria-pressed", String(button.dataset.authMode === mode)));
+				setAuthStatus("");
+			}
+			function initialsFor(name) {
+				return Array.from((name || "O").trim())[0]?.toLocaleUpperCase("uz") || "O";
+			}
+			function renderProfileDraft() {
+				if (!currentUser || !profileDraft) return;
+				const accent = accentSoftColors[profileDraft.accent] ? profileDraft.accent : "#176b61";
+				document.documentElement.style.setProperty("--green", accent);
+				document.documentElement.style.setProperty("--green-soft", accentSoftColors[accent]);
+				document.documentElement.style.setProperty("--profile-accent", accent);
+				document.body.dataset.pattern = profileDraft.pattern;
+				document.getElementById("profile-banner").dataset.pattern = profileDraft.pattern;
+				document.getElementById("profile-preview-name").textContent = profileDraft.displayName || currentUser.username;
+				document.getElementById("profile-preview-handle").textContent = `@${currentUser.username}`;
+				document.getElementById("profile-preview-bio").textContent = profileDraft.bio || "Bio qo‘shilmagan";
+				const initials = initialsFor(profileDraft.displayName || currentUser.username);
+				document.getElementById("profile-avatar").textContent = initials;
+				document.getElementById("account-avatar").textContent = initials;
+				document.getElementById("account-name").textContent = profileDraft.displayName || currentUser.username;
+				document.getElementById("profile-display-name-input").value = profileDraft.displayName || "";
+				document.getElementById("profile-bio-input").value = profileDraft.bio || "";
+				document.querySelectorAll("[data-profile-color]").forEach(button => button.setAttribute("aria-pressed", String(button.dataset.profileColor === accent)));
+				document.querySelectorAll("[data-profile-pattern]").forEach(button => button.setAttribute("aria-pressed", String(button.dataset.profilePattern === profileDraft.pattern)));
+			}
+			function applyAccountPayload(payload) {
+				currentUser = payload.user;
+				const incoming = payload.data || {};
+				const needsStarterDeck = !Array.isArray(incoming.presentations) || incoming.presentations.length === 0;
+				currentData = {
+					tasks: Array.isArray(incoming.tasks) ? incoming.tasks : [],
+					notes: typeof incoming.notes === "string" ? incoming.notes : "",
+					focus: incoming.focus || { date: dayKey, minutes: 0 },
+					library: Array.isArray(incoming.library) ? incoming.library : [],
+					presentations: Array.isArray(incoming.presentations) ? incoming.presentations : [],
+					activeDeck: typeof incoming.activeDeck === "string" ? incoming.activeDeck : ""
+				};
+				tasks.splice(0, tasks.length, ...currentData.tasks);
+				libraryItems.splice(0, libraryItems.length, ...currentData.library);
+				presentations.splice(0, presentations.length, ...currentData.presentations);
+				if (presentations.length === 0) presentations.push(createPresentation());
+				activePresentation = presentations.find(deck => deck.id === currentData.activeDeck) || presentations[0];
+				currentData.presentations = presentations;
+				currentData.activeDeck = activePresentation.id;
+				focusMinutes = currentData.focus.date === dayKey ? currentData.focus : { date: dayKey, minutes: 0 };
+				currentData.focus = focusMinutes;
+				const savedProfile = currentUser.profile || {};
+				profileDraft = {
+					displayName: savedProfile.displayName || currentUser.username,
+					bio: savedProfile.bio || "",
+					accent: accentSoftColors[savedProfile.accent] ? savedProfile.accent : "#176b61",
+					pattern: ["grid", "diagonal", "dots", "lines", "solid"].includes(savedProfile.pattern) ? savedProfile.pattern : "grid"
+				};
+				document.getElementById("auth-gate").hidden = true;
+				document.getElementById("app-shell").hidden = false;
+				document.getElementById("account-area").hidden = false;
+				document.getElementById("sync-status").textContent = "Saqlandi";
+				renderProfileDraft();
+				notes.value = currentData.notes;
+				updateNoteLength();
+				renderTasks();
+				renderLibrary();
+				renderPresentationEditor();
+				updateStats();
+				renderTimer();
+				activateView("home");
+				if (needsStarterDeck) queueDataSave();
+				searchCatalog("subject:science", "Ilm-fan");
+			}
+			function readLegacyData() {
+				const read = (key, fallback) => {
+					try {
+						const value = localStorage.getItem(key);
+						return value === null ? fallback : JSON.parse(value);
+					} catch { return fallback; }
+				};
+				const legacy = {
+					tasks: read(storageKeys.tasks, []), notes: read(storageKeys.notes, ""), focus: read(storageKeys.focus, null),
+					library: read(storageKeys.library, []), presentations: read(storageKeys.presentations, []), activeDeck: read(storageKeys.activeDeck, "")
+				};
+				legacy.hasData = (Array.isArray(legacy.tasks) && legacy.tasks.length > 0) || Boolean(legacy.notes) ||
+					(Array.isArray(legacy.library) && legacy.library.length > 0) || (Array.isArray(legacy.presentations) && legacy.presentations.length > 0);
+				return legacy;
+			}
+			function clearLegacyData() {
+				[storageKeys.tasks, storageKeys.notes, storageKeys.focus, storageKeys.library, storageKeys.presentations, storageKeys.activeDeck].forEach(key => localStorage.removeItem(key));
+			}
+			function importLegacyData(legacy) {
+				const importedTasks = Array.isArray(legacy.tasks) ? legacy.tasks.filter(task => task && typeof task.title === "string") : [];
+				const importedLibrary = Array.isArray(legacy.library) ? legacy.library.filter(item => item && typeof item.title === "string") : [];
+				const importedDecks = Array.isArray(legacy.presentations) ? legacy.presentations.filter(deck => deck && typeof deck.id === "string" && Array.isArray(deck.slides)) : [];
+				tasks.splice(0, tasks.length, ...importedTasks);
+				libraryItems.splice(0, libraryItems.length, ...importedLibrary);
+				if (importedDecks.length > 0) presentations.splice(0, presentations.length, ...importedDecks);
+				activePresentation = presentations.find(deck => deck.id === legacy.activeDeck) || presentations[0];
+				currentData.tasks = tasks;
+				currentData.notes = typeof legacy.notes === "string" ? legacy.notes : "";
+				currentData.focus = legacy.focus && legacy.focus.date === dayKey ? legacy.focus : { date: dayKey, minutes: 0 };
+				currentData.library = libraryItems;
+				currentData.presentations = presentations;
+				currentData.activeDeck = activePresentation.id;
+				focusMinutes = currentData.focus;
+				notes.value = currentData.notes;
+				updateNoteLength();
+				renderTasks();
+				renderLibrary();
+				renderPresentationEditor();
+				updateStats();
+				queueDataSave();
+			}
+			document.querySelectorAll("[data-auth-mode]").forEach(button => button.addEventListener("click", () => setAuthMode(button.dataset.authMode)));
+			document.getElementById("auth-form").addEventListener("submit", async event => {
+				event.preventDefault();
+				const submit = document.getElementById("auth-submit");
+				submit.disabled = true;
+				setAuthStatus(authMode === "register" ? "Akkaunt yaratilmoqda…" : "Kirilmoqda…", true);
+				const legacy = authMode === "register" ? readLegacyData() : null;
+				const username = document.getElementById("auth-username").value.trim();
+				const password = document.getElementById("auth-password").value;
+				try {
+					const registering = authMode === "register";
+					const payload = await apiRequest(registering ? "/api/register" : "/api/login", {
+						method: "POST",
+						body: JSON.stringify({ username, password, displayName: document.getElementById("auth-display-name").value.trim() })
+					});
+					applyAccountPayload(payload);
+					document.getElementById("auth-password").value = "";
+					if (registering && legacy.hasData) {
+						const shouldImport = window.confirm("Bu qurilmada eski Oqim ma’lumotlari bor. Ularni yangi shaxsiy profilingizga ko‘chirasizmi? ‘Yo‘q’ tanlansa, eski brauzer nusxasi o‘chiriladi.");
+						if (shouldImport) importLegacyData(legacy);
+						clearLegacyData();
+					}
+					showToast(registering ? "Akkaunt yaratildi" : "Xush kelibsiz");
+				} catch (error) {
+					setAuthStatus(error.message || "Server bilan bog‘lanib bo‘lmadi.");
+				} finally {
+					submit.disabled = false;
+				}
+			});
+			document.querySelectorAll("[data-profile-color]").forEach(button => button.addEventListener("click", () => {
+				if (!profileDraft) return;
+				profileDraft.accent = button.dataset.profileColor;
+				renderProfileDraft();
+			}));
+			document.querySelectorAll("[data-profile-pattern]").forEach(button => button.addEventListener("click", () => {
+				if (!profileDraft) return;
+				profileDraft.pattern = button.dataset.profilePattern;
+				renderProfileDraft();
+			}));
+			document.getElementById("profile-display-name-input").addEventListener("input", event => {
+				if (!profileDraft) return;
+				profileDraft.displayName = event.currentTarget.value;
+				renderProfileDraft();
+			});
+			document.getElementById("profile-bio-input").addEventListener("input", event => {
+				if (!profileDraft) return;
+				profileDraft.bio = event.currentTarget.value;
+				renderProfileDraft();
+			});
+			document.getElementById("profile-form").addEventListener("submit", async event => {
+				event.preventDefault();
+				if (!currentUser || !profileDraft) return;
+				const status = document.getElementById("profile-status");
+				status.textContent = "Saqlanmoqda…";
+				profileDraft.displayName = document.getElementById("profile-display-name-input").value.trim();
+				profileDraft.bio = document.getElementById("profile-bio-input").value.trim();
+				try {
+					const payload = await apiRequest("/api/profile", { method: "PUT", body: JSON.stringify(profileDraft) });
+					currentUser = payload.user;
+					profileDraft = { ...payload.user.profile };
+					renderProfileDraft();
+					status.textContent = "Profil saqlandi";
+				} catch (error) {
+					status.textContent = error.message || "Profilni saqlab bo‘lmadi.";
+				}
+			});
+			document.getElementById("logout-button").addEventListener("click", async () => {
+				try { await flushDataSave(); } catch {}
+				try { await apiRequest("/api/logout", { method: "POST" }); } catch {}
+				clearTimeout(dataSaveTimeout);
+				stopTimer();
+				currentUser = null;
+				currentData = createEmptyUserData();
+				tasks.splice(0, tasks.length);
+				libraryItems.splice(0, libraryItems.length);
+				presentations.splice(0, presentations.length, createPresentation());
+				activePresentation = presentations[0];
+				notes.value = "";
+				profileDraft = null;
+				document.body.removeAttribute("data-pattern");
+				document.documentElement.style.removeProperty("--green");
+				document.documentElement.style.removeProperty("--green-soft");
+				document.documentElement.style.removeProperty("--profile-accent");
+				document.getElementById("app-shell").hidden = true;
+				document.getElementById("account-area").hidden = true;
+				document.getElementById("auth-gate").hidden = false;
+				activateView("home");
+				setAuthMode("login");
+			});
+			async function restoreSession() {
+				try {
+					const payload = await apiRequest("/api/me");
+					applyAccountPayload(payload);
+				} catch (error) {
+					document.getElementById("app-shell").hidden = true;
+					document.getElementById("auth-gate").hidden = false;
+					setAuthMode("login");
+					setAuthStatus(error.status === 401 ? "" : "Server bilan aloqa yo‘q. Oqim serverini ishga tushiring.");
+				}
+			}
+
+			function formatDue(dateString) {
+				if (!dateString) return "Muddat belgilanmagan";
+				const dueDate = new Date(`${dateString}T00:00:00`);
+				const text = new Intl.DateTimeFormat("uz-UZ", { day: "numeric", month: "short" }).format(dueDate);
+				if (dateString < dayKey) return { text: `Kechikdi · ${text}`, overdue: true };
+				if (dateString === dayKey) return { text: "Bugun", overdue: false };
+				return { text, overdue: false };
+			}
+
+			function renderTasks() {
+				const visibleTasks = tasks
+					.filter(task => activeFilter === "all" || (activeFilter === "done" ? task.done : !task.done))
+					.filter(task => `${task.title} ${task.subject || ""}`.toLocaleLowerCase("uz").includes(searchTerm));
+				visibleTasks.sort((a, b) => Number(a.done) - Number(b.done) || (a.due || "9999").localeCompare(b.due || "9999"));
+				taskList.replaceChildren();
+				if (visibleTasks.length === 0) {
+					const empty = document.createElement("div");
+					empty.className = "empty-state";
+					const title = document.createElement("strong");
+					title.textContent = tasks.length === 0 ? "Rejangiz hali bo‘sh" : "Mos vazifa topilmadi";
+					const detail = document.createElement("span");
+					detail.textContent = tasks.length === 0 ? "Birinchi vazifangizni yuqoridan qo‘shing." : "Boshqa so‘z yoki filtrni sinab ko‘ring.";
+					empty.append(title, detail);
+					taskList.append(empty);
+				} else {
+					visibleTasks.forEach(task => {
+						const row = document.createElement("div");
+						row.className = `task-row${task.done ? " is-done" : ""}`;
+						const checkbox = document.createElement("input");
+						checkbox.className = "task-check";
+						checkbox.type = "checkbox";
+						checkbox.checked = Boolean(task.done);
+						checkbox.setAttribute("aria-label", `${task.title} bajarilgan deb belgilash`);
+						checkbox.addEventListener("change", () => {
+							task.done = checkbox.checked;
+							saveStorage(storageKeys.tasks, tasks);
+							renderTasks();
+							updateStats();
+						});
+						const textWrap = document.createElement("div");
+						const title = document.createElement("div");
+						title.className = "task-title";
+						title.textContent = task.title;
+						const meta = document.createElement("div");
+						meta.className = "task-meta";
+						if (task.subject) {
+							const subject = document.createElement("span");
+							subject.className = "subject-tag";
+							subject.textContent = task.subject;
+							meta.append(subject);
+						}
+						textWrap.append(title, meta);
+						const due = document.createElement("span");
+						const dueInfo = formatDue(task.due);
+						due.className = `due${dueInfo.overdue && !task.done ? " overdue" : ""}`;
+						due.textContent = dueInfo.text;
+						const remove = document.createElement("button");
+						remove.className = "delete-button";
+						remove.type = "button";
+						remove.textContent = "×";
+						remove.setAttribute("aria-label", `${task.title} vazifasini o‘chirish`);
+						remove.addEventListener("click", () => {
+							const index = tasks.findIndex(item => item.id === task.id);
+							if (index !== -1) tasks.splice(index, 1);
+							saveStorage(storageKeys.tasks, tasks);
+							renderTasks();
+							updateStats();
+							showToast("Vazifa o‘chirildi");
+						});
+						row.append(checkbox, textWrap, due, remove);
+						taskList.append(row);
+					});
+				}
+				document.getElementById("task-total").textContent = `${tasks.length} ta`;
+			}
+
+			function updateStats() {
+				document.getElementById("open-count").textContent = tasks.filter(task => !task.done).length;
+				document.getElementById("done-count").textContent = tasks.filter(task => task.done).length;
+				document.getElementById("focus-count").textContent = focusMinutes.minutes;
+			}
+
+			function bookCover(item, index) {
+				const cover = document.createElement("div");
+				cover.className = "book-cover";
+				cover.dataset.tone = String(index % 5);
+				const placeholder = document.createElement("div");
+				placeholder.className = "book-cover-placeholder";
+				const placeholderTitle = document.createElement("strong");
+				placeholderTitle.textContent = item.title;
+				const placeholderLabel = document.createElement("span");
+				placeholderLabel.textContent = item.subject || "O‘quv manbasi";
+				placeholder.append(placeholderTitle, placeholderLabel);
+				cover.append(placeholder);
+				if (item.coverId) {
+					const image = document.createElement("img");
+					image.src = `https://covers.openlibrary.org/b/id/${encodeURIComponent(item.coverId)}-M.jpg`;
+					image.alt = `${item.title} kitob muqovasi`;
+					image.loading = "lazy";
+					image.addEventListener("error", () => image.remove());
+					cover.append(image);
+				}
+				return cover;
+			}
+			function openLibraryUrl(key) {
+				const path = typeof key === "string" && key.startsWith("/") ? key : `/works/${encodeURIComponent(key || "")}`;
+				return `https://openlibrary.org${path}`;
+			}
+			function isBookSaved(book) {
+				const title = (book.title || "").trim().toLocaleLowerCase("uz");
+				return libraryItems.some(item => (book.key && item.key === book.key) || (item.title.trim().toLocaleLowerCase("uz") === title && (item.author || "") === (book.author_name?.[0] || book.author || "")));
+			}
+			function renderCatalog() {
+				const results = document.getElementById("catalog-results");
+				results.replaceChildren();
+				if (catalogDocs.length === 0) {
+					const empty = document.createElement("div");
+					empty.className = "library-empty";
+					const title = document.createElement("strong");
+					title.textContent = "Kitob topilmadi";
+					const detail = document.createElement("span");
+					detail.textContent = "Boshqa nom yoki mavzuni sinab ko‘ring.";
+					empty.append(title, detail);
+					results.append(empty);
+					return;
+				}
+				catalogDocs.forEach((book, index) => {
+					const card = document.createElement("article");
+					card.className = "book-card";
+					card.append(bookCover({ title: book.title, subject: book.subject?.[0], coverId: book.cover_i }, index));
+					const body = document.createElement("div");
+					body.className = "book-card-body";
+					const title = document.createElement("h3");
+					title.className = "book-title";
+					title.textContent = book.title || "Nomsiz asar";
+					const byline = document.createElement("p");
+					byline.className = "book-byline";
+					byline.textContent = (book.author_name || []).slice(0, 2).join(", ") || "Muallif ko‘rsatilmagan";
+					const meta = document.createElement("div");
+					meta.className = "book-card-meta";
+					if (book.first_publish_year) meta.append(document.createTextNode(String(book.first_publish_year)));
+					if (book.edition_count) {
+						const editions = document.createElement("span");
+						editions.textContent = `${book.edition_count} nashr`;
+						meta.append(editions);
+					}
+					const actions = document.createElement("div");
+					actions.className = "book-card-actions";
+					const add = document.createElement("button");
+					add.className = "book-add-button";
+					add.type = "button";
+					const saved = isBookSaved(book);
+					add.textContent = saved ? "Javonda ✓" : "+ Javonga";
+					add.disabled = saved;
+					add.setAttribute("aria-label", `${book.title} ${saved ? "javonda" : "javonga qo‘shish"}`);
+					add.addEventListener("click", () => {
+						if (isBookSaved(book)) return;
+						libraryItems.push({
+							id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+							title: book.title || "Nomsiz asar",
+							author: (book.author_name || []).slice(0, 2).join(", "),
+							subject: book.subject?.[0] || "",
+							url: openLibraryUrl(book.key),
+							key: book.key,
+							coverId: book.cover_i || null,
+							year: book.first_publish_year || null,
+							editionCount: book.edition_count || null,
+							status: "plan"
+						});
+						const savedLocally = saveStorage(storageKeys.library, libraryItems);
+						renderCatalog();
+						renderLibrary();
+						showToast(savedLocally ? "Kitob javonga qo‘shildi" : "Brauzerda saqlash imkoni bo‘lmadi");
+					});
+					const link = document.createElement("a");
+					link.className = "book-open-link";
+					link.href = openLibraryUrl(book.key);
+					link.target = "_blank";
+					link.rel = "noopener noreferrer";
+					link.textContent = "Tafsilot ↗";
+					link.setAttribute("aria-label", `${book.title} Open Library sahifasini ochish`);
+					actions.append(add, link);
+					body.append(title, byline, meta, actions);
+					card.append(body);
+					results.append(card);
+				});
+			}
+			function renderLibrary() {
+				const list = document.getElementById("library-list");
+				const visibleItems = libraryItems
+					.filter(item => libraryFilter === "all" || item.status === libraryFilter)
+					.filter(item => `${item.title} ${item.author || ""} ${item.subject || ""}`.toLocaleLowerCase("uz").includes(librarySearchTerm))
+					.sort((a, b) => a.title.localeCompare(b.title, "uz"));
+				list.replaceChildren();
+				if (visibleItems.length === 0) {
+					const empty = document.createElement("div");
+					empty.className = "library-empty";
+					const title = document.createElement("strong");
+					title.textContent = libraryItems.length === 0 ? "Javoningiz hali bo‘sh" : "Mos kitob topilmadi";
+					const detail = document.createElement("span");
+					detail.textContent = libraryItems.length === 0 ? "Saqlangan kitoblaringiz shu yerda ko‘rinadi." : "Boshqa nom yoki holatni tanlang.";
+					empty.append(title, detail);
+					list.append(empty);
+				} else {
+					visibleItems.forEach((book, index) => {
+						const card = document.createElement("article");
+						card.className = "book-card shelf-card";
+						card.append(bookCover(book, index));
+						const body = document.createElement("div");
+						body.className = "book-card-body";
+						const title = document.createElement("h3");
+						title.className = "book-title";
+						title.textContent = book.title;
+						const byline = document.createElement("p");
+						byline.className = "book-byline";
+						byline.textContent = book.author || book.subject || "Shaxsiy manba";
+						const meta = document.createElement("div");
+						meta.className = "book-card-meta";
+						if (book.year) meta.append(document.createTextNode(String(book.year)));
+						const status = document.createElement("select");
+						status.className = "library-status";
+						status.setAttribute("aria-label", `${book.title} o‘qish holati`);
+						[["plan", "O‘qish rejasida"], ["reading", "O‘qilyapti"], ["read", "O‘qilgan"]].forEach(([value, label]) => {
+							const option = document.createElement("option");
+							option.value = value;
+							option.textContent = label;
+							status.append(option);
+						});
+						status.value = ["plan", "reading", "read"].includes(book.status) ? book.status : "plan";
+						status.addEventListener("change", () => {
+							book.status = status.value;
+							saveStorage(storageKeys.library, libraryItems);
+							renderLibrary();
+						});
+						const actions = document.createElement("div");
+						actions.className = "book-card-actions";
+						if (book.url) {
+							const link = document.createElement("a");
+							link.className = "book-open-link";
+							link.href = book.url;
+							link.target = "_blank";
+							link.rel = "noopener noreferrer";
+							link.textContent = "Ochish ↗";
+							actions.append(link);
+						}
+						const remove = document.createElement("button");
+						remove.className = "delete-button";
+						remove.type = "button";
+						remove.textContent = "×";
+						remove.setAttribute("aria-label", `${book.title} ni javondan o‘chirish`);
+						remove.addEventListener("click", () => {
+							const itemIndex = libraryItems.findIndex(item => item.id === book.id);
+							if (itemIndex !== -1) libraryItems.splice(itemIndex, 1);
+							saveStorage(storageKeys.library, libraryItems);
+							renderLibrary();
+							renderCatalog();
+						});
+						actions.append(status, remove);
+						body.append(title, byline, meta, actions);
+						card.append(body);
+						list.append(card);
+					});
+				}
+				document.getElementById("library-total").textContent = libraryItems.length;
+			}
+			async function searchCatalog(query, label) {
+				const requestId = ++catalogRequestId;
+				catalogHeading = label || query;
+				document.getElementById("library-heading").textContent = catalogHeading;
+				document.getElementById("catalog-status").textContent = "Qidirilmoqda...";
+				document.getElementById("catalog-results").replaceChildren();
+				try {
+					const url = new URL("https://openlibrary.org/search.json");
+					url.searchParams.set("q", query);
+					url.searchParams.set("limit", "20");
+					url.searchParams.set("fields", "key,title,author_name,first_publish_year,cover_i,edition_count,subject");
+					const response = await fetch(url);
+					if (!response.ok) throw new Error(`Catalog request failed: ${response.status}`);
+					const data = await response.json();
+					if (requestId !== catalogRequestId) return;
+					catalogDocs = (data.docs || []).filter(book => book && book.title);
+					renderCatalog();
+					document.getElementById("catalog-status").textContent = `${catalogDocs.length} ta natija`;
+				} catch {
+					if (requestId !== catalogRequestId) return;
+					catalogDocs = [];
+					renderCatalog();
+					document.getElementById("catalog-status").textContent = "Katalogga ulanib bo‘lmadi. Qayta urinib ko‘ring.";
+				}
+			}
+			document.getElementById("catalog-search-form").addEventListener("submit", event => {
+				event.preventDefault();
+				const query = document.getElementById("catalog-query").value.trim();
+				if (query) searchCatalog(query, `“${query}” bo‘yicha natijalar`);
+			});
+			document.querySelectorAll("[data-catalog-query]").forEach(button => button.addEventListener("click", () => {
+				document.getElementById("catalog-query").value = button.dataset.catalogLabel;
+				searchCatalog(button.dataset.catalogQuery, button.dataset.catalogLabel);
+			}));
+			document.querySelectorAll("[data-library-view]").forEach(button => button.addEventListener("click", () => {
+				activeLibraryView = button.dataset.libraryView;
+				document.getElementById("library-catalog-view").hidden = activeLibraryView !== "catalog";
+				document.getElementById("library-shelf-view").hidden = activeLibraryView !== "shelf";
+				document.getElementById("library-discovery-tools").hidden = activeLibraryView !== "catalog";
+				document.querySelectorAll("[data-library-view]").forEach(tab => tab.setAttribute("aria-pressed", String(tab === button)));
+				if (activeLibraryView === "shelf") renderLibrary();
+			}));
+
+			document.getElementById("library-form").addEventListener("submit", event => {
+				event.preventDefault();
+				const title = document.getElementById("book-title").value.trim();
+				const url = document.getElementById("book-url").value.trim();
+				if (!title) return;
+				if (url) {
+					try {
+						const parsedUrl = new URL(url);
+						if (parsedUrl.protocol !== "https:" && parsedUrl.protocol !== "http:") throw new Error("Unsupported URL protocol");
+					} catch {
+						document.getElementById("book-url").setCustomValidity("Faqat http yoki https havolalarini kiriting.");
+						document.getElementById("book-url").reportValidity();
+						return;
+					}
+				}
+				libraryItems.push({
+					id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+					title,
+					author: document.getElementById("book-author").value.trim(),
+					subject: document.getElementById("book-subject").value.trim(),
+					url,
+					status: "plan"
+				});
+				const saved = saveStorage(storageKeys.library, libraryItems);
+				event.currentTarget.reset();
+				document.getElementById("book-url").setCustomValidity("");
+				renderLibrary();
+				renderCatalog();
+				showToast(saved ? "Material kutubxonaga qo‘shildi" : "Saqlash imkoni bo‘lmadi. Brauzer xotirasini tekshiring.");
+			});
+			document.getElementById("book-url").addEventListener("input", event => event.currentTarget.setCustomValidity(""));
+			document.getElementById("library-search").addEventListener("input", event => {
+				librarySearchTerm = event.target.value.trim().toLocaleLowerCase("uz");
+				renderLibrary();
+			});
+			document.getElementById("library-filter").addEventListener("change", event => {
+				libraryFilter = event.target.value;
+				renderLibrary();
+			});
+
+			document.getElementById("task-form").addEventListener("submit", event => {
+				event.preventDefault();
+				const form = event.currentTarget;
+				const title = document.getElementById("task-title").value.trim();
+				if (!title) return;
+				tasks.push({
+					id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+					title,
+					subject: document.getElementById("task-subject").value.trim(),
+					due: document.getElementById("task-date").value,
+					done: false
+				});
+				if (!saveStorage(storageKeys.tasks, tasks)) showToast("Saqlash imkoni bo‘lmadi. Brauzer xotirasini tekshiring.");
+				form.reset();
+				renderTasks();
+				updateStats();
+				document.getElementById("task-title").focus();
+			});
+
+			document.querySelectorAll("[data-filter]").forEach(button => {
+				button.addEventListener("click", () => {
+					activeFilter = button.dataset.filter;
+					document.querySelectorAll("[data-filter]").forEach(item => item.setAttribute("aria-pressed", String(item === button)));
+					renderTasks();
+				});
+			});
+			document.getElementById("task-search").addEventListener("input", event => {
+				searchTerm = event.target.value.trim().toLocaleLowerCase("uz");
+				renderTasks();
+			});
+
+			const deckPicker = document.getElementById("deck-picker");
+			const deckTitleInput = document.getElementById("deck-title");
+			const slideTitleInput = document.getElementById("slide-title");
+			const slideBodyInput = document.getElementById("slide-body");
+			const slideNotesInput = document.getElementById("slide-notes");
+			const slideLayoutInput = document.getElementById("slide-layout");
+			const slideStage = document.getElementById("slide-stage");
+
+			function currentSlide() { return activePresentation.slides[activeSlideIndex]; }
+			function persistPresentations() {
+				const saved = saveStorage(storageKeys.presentations, presentations);
+				saveStorage(storageKeys.activeDeck, activePresentation.id);
+				document.getElementById("deck-save-status").textContent = saved ? "Saqlandi" : "Saqlanmadi";
+			}
+			function renderDeckPicker() {
+				deckPicker.replaceChildren();
+				presentations.forEach(presentation => {
+					const option = document.createElement("option");
+					option.value = presentation.id;
+					option.textContent = presentation.title.trim() || "Nomsiz taqdimot";
+					deckPicker.append(option);
+				});
+				deckPicker.value = activePresentation.id;
+			}
+			function renderSlideList() {
+				const list = document.getElementById("slide-list");
+				list.replaceChildren();
+				activePresentation.slides.forEach((slide, index) => {
+					const item = document.createElement("div");
+					item.className = "slide-list-item";
+					const select = document.createElement("button");
+					select.className = "slide-thumb";
+					select.type = "button";
+					select.setAttribute("aria-current", String(index === activeSlideIndex));
+					const number = document.createElement("strong");
+					number.textContent = `SLAYD ${String(index + 1).padStart(2, "0")}`;
+					const title = document.createElement("span");
+					title.textContent = slide.title || "Sarlavhasiz";
+					select.append(number, title);
+					select.addEventListener("click", () => { activeSlideIndex = index; renderPresentationEditor(); });
+					const remove = document.createElement("button");
+					remove.className = "slide-delete";
+					remove.type = "button";
+					remove.textContent = "×";
+					remove.disabled = activePresentation.slides.length === 1;
+					remove.setAttribute("aria-label", `Slayd ${index + 1} ni o‘chirish`);
+					remove.addEventListener("click", () => {
+						if (activePresentation.slides.length < 2) return;
+						activePresentation.slides.splice(index, 1);
+						activeSlideIndex = Math.min(activeSlideIndex, activePresentation.slides.length - 1);
+						renderPresentationEditor();
+						persistPresentations();
+					});
+					item.append(select, remove);
+					list.append(item);
+				});
+				document.getElementById("slide-total").textContent = activePresentation.slides.length;
+			}
+			function renderSlidePreview() {
+				const slide = currentSlide();
+				const sheet = document.getElementById("slide-sheet");
+				sheet.dataset.theme = activePresentation.theme;
+				sheet.classList.toggle("slide-layout-cover", slide.layout === "cover");
+				document.getElementById("slide-kicker").textContent = activePresentation.title.trim() || "TAQDIMOT";
+				document.getElementById("slide-preview-title").textContent = slide.title || "Sarlavha";
+				document.getElementById("slide-footer-title").textContent = activePresentation.title.trim() || "Yangi taqdimot";
+				document.getElementById("slide-number").textContent = `${String(activeSlideIndex + 1).padStart(2, "0")} / ${String(activePresentation.slides.length).padStart(2, "0")}`;
+				const bullets = document.getElementById("slide-bullets");
+				bullets.replaceChildren();
+				slide.body.split(/\r?\n/).map(line => line.trim()).filter(Boolean).forEach(line => {
+					const point = document.createElement("li");
+					point.textContent = line;
+					bullets.append(point);
+				});
+				document.getElementById("slide-counter").textContent = `${activeSlideIndex + 1} / ${activePresentation.slides.length}`;
+				document.getElementById("slide-previous").disabled = activeSlideIndex === 0;
+				document.getElementById("slide-next").disabled = activeSlideIndex === activePresentation.slides.length - 1;
+				document.getElementById("present-previous").disabled = activeSlideIndex === 0;
+				document.getElementById("present-next").disabled = activeSlideIndex === activePresentation.slides.length - 1;
+				document.getElementById("move-slide-up").disabled = activeSlideIndex === 0;
+				document.getElementById("move-slide-down").disabled = activeSlideIndex === activePresentation.slides.length - 1;
+			}
+			function renderPresentationEditor() {
+				renderDeckPicker();
+				deckTitleInput.value = activePresentation.title;
+				document.querySelectorAll("[data-theme-choice]").forEach(button => button.setAttribute("aria-pressed", String(button.dataset.themeChoice === activePresentation.theme)));
+				const slide = currentSlide();
+				slideLayoutInput.value = slide.layout === "cover" ? "cover" : "content";
+				slideTitleInput.value = slide.title;
+				slideBodyInput.value = slide.body;
+				slideNotesInput.value = slide.notes;
+				renderSlideList();
+				renderSlidePreview();
+			}
+			function changeSlide(delta) {
+				const nextIndex = activeSlideIndex + delta;
+				if (nextIndex < 0 || nextIndex >= activePresentation.slides.length) return;
+				activeSlideIndex = nextIndex;
+				renderPresentationEditor();
+			}
+			function moveSlide(delta) {
+				const nextIndex = activeSlideIndex + delta;
+				if (nextIndex < 0 || nextIndex >= activePresentation.slides.length) return;
+				const [slide] = activePresentation.slides.splice(activeSlideIndex, 1);
+				activePresentation.slides.splice(nextIndex, 0, slide);
+				activeSlideIndex = nextIndex;
+				renderPresentationEditor();
+				persistPresentations();
+			}
+			function updateCurrentSlide(field, value) {
+				currentSlide()[field] = value;
+				renderSlideList();
+				renderSlidePreview();
+				persistPresentations();
+			}
+
+			deckPicker.addEventListener("change", () => {
+				activePresentation = presentations.find(presentation => presentation.id === deckPicker.value) || presentations[0];
+				activeSlideIndex = 0;
+				renderPresentationEditor();
+				persistPresentations();
+			});
+			deckTitleInput.addEventListener("input", () => {
+				activePresentation.title = deckTitleInput.value;
+				renderDeckPicker();
+				renderSlidePreview();
+				persistPresentations();
+			});
+			document.getElementById("new-deck").addEventListener("click", () => {
+				activePresentation = createPresentation();
+				presentations.push(activePresentation);
+				activeSlideIndex = 0;
+				renderPresentationEditor();
+				persistPresentations();
+				deckTitleInput.focus();
+			});
+			document.getElementById("delete-deck").addEventListener("click", () => {
+				if (presentations.length === 1) { showToast("Kamida bitta taqdimot qolishi kerak"); return; }
+				if (!confirm(`“${activePresentation.title || "Nomsiz taqdimot"}” o‘chirilsinmi?`)) return;
+				const index = presentations.findIndex(presentation => presentation.id === activePresentation.id);
+				presentations.splice(index, 1);
+				activePresentation = presentations[0];
+				activeSlideIndex = 0;
+				renderPresentationEditor();
+				persistPresentations();
+			});
+			document.querySelectorAll("[data-theme-choice]").forEach(button => button.addEventListener("click", () => {
+				activePresentation.theme = button.dataset.themeChoice;
+				renderPresentationEditor();
+				persistPresentations();
+			}));
+			document.getElementById("add-slide").addEventListener("click", () => {
+				activePresentation.slides.push(createSlide("content"));
+				activeSlideIndex = activePresentation.slides.length - 1;
+				renderPresentationEditor();
+				persistPresentations();
+				slideTitleInput.focus();
+			});
+			slideLayoutInput.addEventListener("change", () => updateCurrentSlide("layout", slideLayoutInput.value));
+			slideTitleInput.addEventListener("input", () => updateCurrentSlide("title", slideTitleInput.value));
+			slideBodyInput.addEventListener("input", () => updateCurrentSlide("body", slideBodyInput.value));
+			slideNotesInput.addEventListener("input", () => updateCurrentSlide("notes", slideNotesInput.value));
+			document.getElementById("move-slide-up").addEventListener("click", () => moveSlide(-1));
+			document.getElementById("move-slide-down").addEventListener("click", () => moveSlide(1));
+			document.getElementById("slide-previous").addEventListener("click", () => changeSlide(-1));
+			document.getElementById("slide-next").addEventListener("click", () => changeSlide(1));
+			document.getElementById("present-previous").addEventListener("click", () => changeSlide(-1));
+			document.getElementById("present-next").addEventListener("click", () => changeSlide(1));
+			document.getElementById("present-deck").addEventListener("click", async () => {
+				slideStage.classList.add("is-presenting");
+				try { await slideStage.requestFullscreen(); } catch { showToast("Brauzer to‘liq ekran rejimini ocholmadi"); }
+			});
+			function exitPresentation() {
+				slideStage.classList.remove("is-presenting");
+				if (document.fullscreenElement === slideStage) document.exitFullscreen().catch(() => {});
+			}
+			document.getElementById("exit-present").addEventListener("click", exitPresentation);
+			document.addEventListener("fullscreenchange", () => {
+				if (document.fullscreenElement !== slideStage) slideStage.classList.remove("is-presenting");
+			});
+			document.addEventListener("keydown", event => {
+				if (!slideStage.classList.contains("is-presenting")) return;
+				if (event.key === "Escape") { event.preventDefault(); exitPresentation(); return; }
+				if (event.key === "ArrowRight" || event.key === "ArrowDown") { event.preventDefault(); changeSlide(1); }
+				if (event.key === "ArrowLeft" || event.key === "ArrowUp") { event.preventDefault(); changeSlide(-1); }
+			});
+			function buildPrintDeck() {
+				const printDeck = document.getElementById("print-deck");
+				printDeck.replaceChildren();
+				activePresentation.slides.forEach((slide, index) => {
+					const page = document.createElement("section");
+					page.className = `print-slide${slide.layout === "cover" ? " is-cover" : ""}`;
+					page.dataset.theme = activePresentation.theme;
+					const title = document.createElement("h1");
+					title.textContent = slide.title || "Sarlavha";
+					const points = document.createElement("ul");
+					slide.body.split(/\r?\n/).map(line => line.trim()).filter(Boolean).forEach(line => {
+						const point = document.createElement("li");
+						point.textContent = line;
+						points.append(point);
+					});
+					const footer = document.createElement("footer");
+					const deckName = document.createElement("span");
+					deckName.textContent = activePresentation.title;
+					const pageNumber = document.createElement("span");
+					pageNumber.textContent = `${index + 1} / ${activePresentation.slides.length}`;
+					footer.append(deckName, pageNumber);
+					page.append(title, points, footer);
+					printDeck.append(page);
+				});
+			}
+			document.getElementById("export-deck").addEventListener("click", () => { buildPrintDeck(); window.print(); });
+
+			const notes = document.getElementById("notes");
+			notes.value = readStorage(storageKeys.notes, "");
+			const noteLength = document.getElementById("note-length");
+			const saveStatus = document.getElementById("save-status");
+			function updateNoteLength() { noteLength.textContent = `${notes.value.length} / 2000`; }
+			updateNoteLength();
+			let noteSaveTimeout;
+			notes.addEventListener("input", () => {
+				updateNoteLength();
+				saveStatus.textContent = "Saqlanmoqda...";
+				clearTimeout(noteSaveTimeout);
+				noteSaveTimeout = setTimeout(() => {
+					saveStatus.textContent = saveStorage(storageKeys.notes, notes.value) ? "Saqlandi" : "Saqlash imkoni bo‘lmadi";
+				}, 250);
+			});
+
+			const timerDisplay = document.getElementById("timer-time");
+			const timerToggle = document.getElementById("timer-toggle");
+			function renderTimer() {
+				const minutes = Math.floor(timerSeconds / 60);
+				const seconds = timerSeconds % 60;
+				timerDisplay.textContent = `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+				timerToggle.textContent = timerRunning ? "Pauza" : "Boshlash";
+				document.title = timerRunning ? `${timerDisplay.textContent} · Oqim` : "Oqim — talaba yordamchisi";
+			}
+			function stopTimer() {
+				clearInterval(timerInterval);
+				timerInterval = null;
+				timerRunning = false;
+			}
+			timerToggle.addEventListener("click", () => {
+				if (timerRunning) {
+					stopTimer();
+					renderTimer();
+					return;
+				}
+				timerRunning = true;
+				timerInterval = setInterval(() => {
+					timerSeconds -= 1;
+					if (timerSeconds <= 0) {
+						stopTimer();
+						if (timerMode === "focus") {
+							focusMinutes.minutes += 25;
+							saveStorage(storageKeys.focus, focusMinutes);
+							updateStats();
+						}
+						showToast(timerMode === "focus" ? "Fokus vaqti tugadi. Biroz dam oling!" : "Tanaffus tugadi. Ishga qaytamiz!");
+						timerSeconds = (timerMode === "focus" ? 25 : 5) * 60;
+					}
+					renderTimer();
+				}, 1000);
+				renderTimer();
+			});
+			document.getElementById("timer-reset").addEventListener("click", () => {
+				stopTimer();
+				timerSeconds = (timerMode === "focus" ? 25 : 5) * 60;
+				renderTimer();
+			});
+			document.getElementById("timer-switch").addEventListener("click", event => {
+				stopTimer();
+				timerMode = timerMode === "focus" ? "break" : "focus";
+				timerSeconds = (timerMode === "focus" ? 25 : 5) * 60;
+				document.getElementById("timer-mode").textContent = timerMode === "focus" ? "Diqqat vaqti" : "Qisqa tanaffus";
+				event.currentTarget.textContent = timerMode === "focus" ? "Tanaffus taymeriga o‘tish" : "Fokus taymeriga o‘tish";
+				renderTimer();
+			});
+
+			renderTasks();
+			renderLibrary();
+			renderPresentationEditor();
+			updateStats();
+			renderTimer();
+			const savedView = localStorage.getItem("oqim.activeView.v1");
+			activateView([...viewPanels].some(panel => panel.dataset.viewPanel === savedView) ? savedView : "home");
+			restoreSession();
+		})();
+	</script>
+</body>
+</html>
